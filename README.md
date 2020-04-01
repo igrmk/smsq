@@ -7,7 +7,7 @@ Installation
 ------------
 
 Just install mobile application
-  * Android: https://play.google.com/store/apps/details?id=com.github.igrmk.smsq
+  * Android (waiting for review): https://play.google.com/store/apps/details?id=com.github.igrmk.smsq
 
 Privacy policy
 --------------
