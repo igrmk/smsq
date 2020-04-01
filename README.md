@@ -1,7 +1,13 @@
-smsQ
-====
+<img src="svg/smsq.svg" width="48" height="48">&ensp;smsQ
+=================================================================
 
-Receive your SMS messages in Telegram bot.
+Receive your SMS messages in Telegram.
+
+How it works
+------------
+
+We wrote Telegram bot for it.
+Every time you receive SMS it will be sent to your Telegram by this bot.
 
 Installation
 ------------
