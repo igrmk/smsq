@@ -35,13 +35,12 @@ class SmsReceiver : BroadcastReceiver() {
             return
         }
 
-        ldbg(tag, "action received: " + intent.action)
-        val extras = intent.extras!!
-        val isDefault = Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
-        if (isDefault && intent.action == "android.provider.Telephony.SMS_RECEIVED") {
-            ldbg(tag, "rejecting SMS as we are default provider")
+        if (intent.action != "android.provider.Telephony.SMS_RECEIVED") {
             return
         }
+
+        ldbg(tag, "action received: " + intent.action)
+        val extras = intent.extras!!
         val slot = extras.getInt("slot", -1)
         val simInfo = if (slot >= 0) simInfo(context, slot) else null
         var displayName = ""
