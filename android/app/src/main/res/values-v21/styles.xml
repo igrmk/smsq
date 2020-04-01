@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorButtonNormal">@color/buttonNormal</item>
+        <item name="colorControlHighlight">@color/colorAccent</item>
+        <item name="buttonStyle">@style/Button</item>
+        <item name="android:buttonStyle">@style/Button</item>
+        <item name="switchStyle">@style/Switch</item>
+        <item name="android:switchStyle">@style/Switch</item>
+    </style>
+</resources>

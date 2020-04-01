@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#aaaaaa</color>
+    <color name="colorPrimaryDark">#424242</color>
+    <color name="colorAccent">@color/colorOn</color>
+    <color name="colorOff">#40000000</color>
+    <color name="colorOn">#82d2f6</color>
+    <color name="background">#4a5050</color>
+    <color name="disabledText">#39dddddd</color>
+    <color name="buttonText">#dddddd</color>
+    <color name="text">#444444</color>
+    <color name="buttonNormal">#373c3c</color>
+</resources>

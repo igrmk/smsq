@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">smsQ</string>
+    <string name="app_name_version">smsQ 0.1</string>
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="connect">Connect Telegram</string>
+    <string name="revoke">Revoke</string>
+    <string name="show_carrier">Show carrier</string>
+</resources>

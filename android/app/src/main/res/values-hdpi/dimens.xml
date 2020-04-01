@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="carrier_margin">24dp</dimen>
+    <dimen name="button_font_size">17sp</dimen>
+    <dimen name="switch_font_size">16sp</dimen>
+    <dimen name="button_margin">0dp</dimen>
+</resources>

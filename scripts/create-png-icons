@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cur="$(dirname "$(readlink -f "$0")")"
+cd "$cur/../svg"
+
+inkscape -z --export-area-page --export-png="smsq.png" --export-width=1024 --export-height=1024 smsq.svg

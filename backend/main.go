@@ -1,0 +1,513 @@
+package main
+
+import (
+	"crypto/sha256"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"math/rand"
+	"net/http"
+	"os"
+	"os/signal"
+	"path"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+	"unicode/utf8"
+
+	tg "github.com/go-telegram-bot-api/telegram-bot-api"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+var errBlockedByUser = errors.New("blocked by user")
+
+// checkErr panics on an error
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+type sms struct {
+	Key       string `json:"key"`
+	ID        int64  `json:"id"`
+	Text      string `json:"text"`
+	SIM       string `json:"sim"`
+	Carrier   string `json:"carrier"`
+	Sender    string `json:"sender"`
+	Timestamp int64  `json:"timestamp"`
+	Offset    int    `json:"offset"`
+}
+
+type deliveryResult int
+
+//go:generate jsonenums -type=deliveryResult
+const (
+	delivered    deliveryResult = 0
+	networkError deliveryResult = 1
+	blocked      deliveryResult = 2
+	badRequest   deliveryResult = 3
+	userNotFound deliveryResult = 4
+)
+
+type smsResponse struct {
+	Error  *string         `json:"error"`
+	Result *deliveryResult `json:"result"`
+}
+
+type deliverCommand struct {
+	sms    sms
+	result chan deliveryResult
+}
+
+type worker struct {
+	bot         *tg.BotAPI
+	db          *sql.DB
+	cfg         *config
+	client      *http.Client
+	deliverChan chan deliverCommand
+}
+
+func newWorker() *worker {
+	if len(os.Args) != 2 {
+		panic("usage: smsq <config>")
+	}
+	cfg := readConfig(os.Args[1])
+	client := &http.Client{Timeout: time.Second * time.Duration(cfg.TimeoutSeconds)}
+	bot, err := tg.NewBotAPIWithClient(cfg.BotToken, tg.APIEndpoint, client)
+	checkErr(err)
+	db, err := sql.Open("sqlite3", cfg.DBPath)
+	checkErr(err)
+	w := &worker{
+		bot:         bot,
+		db:          db,
+		cfg:         cfg,
+		client:      client,
+		deliverChan: make(chan deliverCommand),
+	}
+
+	return w
+}
+
+func (r deliveryResult) String() string {
+	switch r {
+	case delivered:
+		return "delivered"
+	case networkError:
+		return "network_error"
+	case blocked:
+		return "blocked"
+	case badRequest:
+		return "bad_request"
+	case userNotFound:
+		return "user_not_found"
+	default:
+		return "undefined"
+	}
+}
+
+func (w *worker) logConfig() {
+	cfgString, err := json.MarshalIndent(w.cfg, "", "    ")
+	checkErr(err)
+	linf("config: " + string(cfgString))
+}
+
+func (w *worker) setWebhook() {
+	linf("setting webhook...")
+	_, err := w.bot.SetWebhook(tg.NewWebhook(path.Join(w.cfg.Host, w.cfg.ListenPath)))
+	checkErr(err)
+	info, err := w.bot.GetWebhookInfo()
+	checkErr(err)
+	if info.LastErrorDate != 0 {
+		linf("last webhook error time: %v", time.Unix(int64(info.LastErrorDate), 0))
+	}
+	if info.LastErrorMessage != "" {
+		linf("last webhook error message: %s", info.LastErrorMessage)
+	}
+	linf("OK")
+}
+
+func (w *worker) removeWebhook() {
+	linf("removing webhook...")
+	_, err := w.bot.RemoveWebhook()
+	checkErr(err)
+	linf("OK")
+}
+
+func (w *worker) mustExec(query string, args ...interface{}) {
+	stmt, err := w.db.Prepare(query)
+	checkErr(err)
+	_, err = stmt.Exec(args...)
+	checkErr(err)
+	stmt.Close()
+}
+
+func (w *worker) createDatabase() {
+	linf("creating database if needed...")
+	w.mustExec(`
+		create table if not exists feedback (
+			chat_id integer,
+			text text);`)
+	w.mustExec(`
+		create table if not exists users (
+			chat_id integer primary key,
+			key text not null default '');`)
+}
+
+func (w *worker) chatKey(chatID int64) *string {
+	query, err := w.db.Query("select key from users where chat_id=?", chatID)
+	checkErr(err)
+	defer query.Close()
+	if !query.Next() {
+		return nil
+	}
+	var chatKey string
+	checkErr(query.Scan(&chatKey))
+	return &chatKey
+}
+
+func (w *worker) chatForKey(chatKey string) *int64 {
+	query, err := w.db.Query("select chat_id from users where key=?", chatKey)
+	checkErr(err)
+	defer query.Close()
+	if !query.Next() {
+		return nil
+	}
+	var chatID int64
+	checkErr(query.Scan(&chatID))
+	return &chatID
+}
+
+func checkKey(key string) bool {
+	hash := sha256.Sum256([]byte(key))
+	hash = sha256.Sum256(hash[:])
+	return hash[0] == 0 && hash[1]&0xf0 == 0
+}
+
+func (w *worker) userExists(chatID int64) bool {
+	return singleInt(w.db.QueryRow("select count(*) from users where chat_id=?", chatID)) != 0
+}
+
+func (w *worker) stop(chatID int64) {
+	w.mustExec("delete from users where chat_id=?", chatID)
+	_ = w.sendText(chatID, false, parseRaw, "Access revoked")
+}
+
+func (w *worker) start(chatID int64, key string) {
+	if key == "" && w.userExists(chatID) {
+		_ = w.sendText(chatID, false, parseRaw, "You are already set up!")
+		return
+	}
+	if key == "" || !checkKey(key) {
+		_ = w.sendText(chatID, false, parseRaw, "Install smsQ application on your phone https://play.google.com/store/apps/details?id=com.github.igrmk.smsq")
+		return
+	}
+	chatKey := w.chatKey(chatID)
+	if chatKey != nil && *chatKey == key {
+		_ = w.sendText(chatID, false, parseRaw, "You are already set up!")
+		return
+	}
+	if chatKey != nil {
+		_ = w.sendText(chatID, false, parseRaw, "Your previous subscription is revoked")
+	}
+
+	existingChatID := w.chatForKey(key)
+	if existingChatID != nil && *existingChatID != chatID {
+		_ = w.sendText(chatID, false, parseRaw, "Subscription on other Telegram account has been revoked")
+		_ = w.sendText(*existingChatID, false, parseRaw, "Your subscription has been revoked from other Telegram account")
+	}
+
+	w.mustExec(`
+		insert or replace into users (chat_id, key) values (?, ?)
+		on conflict(chat_id) do update set key=excluded.key`,
+		chatID,
+		key)
+
+	_ = w.sendText(chatID, false, parseRaw, "Congratulations! You should see here new SMS messages")
+}
+
+func (w *worker) broadcastChats() (chats []int64) {
+	chatsQuery, err := w.db.Query(`select chat_id from users`)
+	checkErr(err)
+	defer chatsQuery.Close()
+	for chatsQuery.Next() {
+		var chatID int64
+		checkErr(chatsQuery.Scan(&chatID))
+		chats = append(chats, chatID)
+	}
+	return
+}
+
+func (w *worker) broadcast(text string) {
+	if text == "" {
+		return
+	}
+	if w.cfg.Debug {
+		ldbg("broadcasting")
+	}
+	chats := w.broadcastChats()
+	for _, chatID := range chats {
+		_ = w.sendText(chatID, true, parseRaw, text)
+	}
+	_ = w.sendText(w.cfg.AdminID, false, parseRaw, "OK")
+}
+
+func (w *worker) direct(arguments string) {
+	parts := strings.SplitN(arguments, " ", 2)
+	if len(parts) < 2 {
+		_ = w.sendText(w.cfg.AdminID, false, parseRaw, "Usage: /direct chatID text")
+		return
+	}
+	whom, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		_ = w.sendText(w.cfg.AdminID, false, parseRaw, "First argument is invalid")
+		return
+	}
+	text := parts[1]
+	if text == "" {
+		return
+	}
+	_ = w.sendText(whom, true, parseRaw, text)
+	_ = w.sendText(w.cfg.AdminID, false, parseRaw, "OK")
+}
+
+func (w *worker) processAdminMessage(chatID int64, command, arguments string) bool {
+	switch command {
+	case "stat":
+		w.stat()
+		return true
+	case "broadcast":
+		w.broadcast(arguments)
+		return true
+	case "direct":
+		w.direct(arguments)
+		return true
+	}
+	return false
+}
+
+func (w *worker) processIncomingCommand(chatID int64, command, arguments string) {
+	command = strings.ToLower(command)
+	linf("chat: %d, command: %s %s", chatID, command, arguments)
+	if chatID == w.cfg.AdminID && w.processAdminMessage(chatID, command, arguments) {
+		return
+	}
+	switch command {
+	case "stop":
+		w.stop(chatID)
+	case "feedback":
+		w.feedback(chatID, arguments)
+	case "start":
+		w.start(chatID, arguments)
+	case "source":
+		_ = w.sendText(chatID, false, parseRaw, "Source code: https://github.com/igrmk/smsq")
+	default:
+		_ = w.sendText(chatID, false, parseRaw, "Unknown command")
+	}
+}
+
+func (w *worker) ourID() int64 {
+	if idx := strings.Index(w.cfg.BotToken, ":"); idx != -1 {
+		id, err := strconv.ParseInt(w.cfg.BotToken[:idx], 10, 64)
+		checkErr(err)
+		return id
+	}
+	checkErr(errors.New("cannot get our ID"))
+	return 0
+}
+
+func (w *worker) processTGUpdate(u tg.Update) {
+	if u.Message != nil && u.Message.Chat != nil {
+		if newMembers := u.Message.NewChatMembers; newMembers != nil && len(*newMembers) > 0 {
+			ourID := w.ourID()
+			for _, m := range *newMembers {
+				if int64(m.ID) == ourID {
+					_ = w.sendText(u.Message.Chat.ID, false, parseRaw, "This bot should not work in group")
+					break
+				}
+			}
+		} else if u.Message.IsCommand() {
+			w.processIncomingCommand(u.Message.Chat.ID, u.Message.Command(), u.Message.CommandArguments())
+		} else {
+			if u.Message.Text == "" {
+				return
+			}
+			parts := strings.SplitN(u.Message.Text, " ", 2)
+			for len(parts) < 2 {
+				parts = append(parts, "")
+			}
+			w.processIncomingCommand(u.Message.Chat.ID, parts[0], parts[1])
+		}
+	}
+}
+
+func (w *worker) feedback(chatID int64, text string) {
+	if text == "" {
+		_ = w.sendText(chatID, false, parseRaw, "Command format: /feedback <text>")
+		return
+	}
+	w.mustExec("insert into feedback (chat_id, text) values (?, ?)", chatID, text)
+	_ = w.sendText(chatID, false, parseRaw, "Thank you for your feedback")
+	_ = w.sendText(w.cfg.AdminID, true, parseRaw, fmt.Sprintf("Feedback: %s", text))
+}
+
+func (w *worker) userCount() int {
+	query := w.db.QueryRow("select count(*) from users")
+	return singleInt(query)
+}
+
+func (w *worker) activeUserCount() int {
+	query := w.db.QueryRow("select count(*) from users where delivered > 0")
+	return singleInt(query)
+}
+
+func (w *worker) smsCount() int {
+	query := w.db.QueryRow("select coalesce(sum(delivered), 0) from users")
+	return singleInt(query)
+}
+
+func (w *worker) stat() {
+	lines := []string{}
+	lines = append(lines, fmt.Sprintf("users: %d", w.userCount()))
+	lines = append(lines, fmt.Sprintf("active users: %d", w.activeUserCount()))
+	lines = append(lines, fmt.Sprintf("smses: %d", w.smsCount()))
+	_ = w.sendText(w.cfg.AdminID, false, parseRaw, strings.Join(lines, "\n"))
+}
+
+func (w *worker) sendText(chatID int64, notify bool, parse parseKind, text string) error {
+	msg := tg.NewMessage(chatID, text)
+	msg.DisableNotification = !notify
+	switch parse {
+	case parseHTML, parseMarkdown:
+		msg.ParseMode = parse.String()
+	}
+	return w.send(&messageConfig{msg})
+}
+
+func (w *worker) send(msg baseChattable) error {
+	if _, err := w.bot.Send(msg); err != nil {
+		switch err := err.(type) {
+		case tg.Error:
+			if err.Code == 403 {
+				linf("bot is blocked by the user %d, %v", msg.baseChat().ChatID, err)
+				return errBlockedByUser
+			}
+			lerr("cannot send a message to %d, code %d, %v", msg.baseChat().ChatID, err.Code, err)
+		default:
+			lerr("unexpected error type while sending a message to %d, %v", msg.baseChat().ChatID, err)
+		}
+		return err
+	}
+	return nil
+}
+
+func (w *worker) handleSMS(writer http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(writer, "404 not found", http.StatusNotFound)
+		return
+	}
+
+	var sms sms
+	err := json.NewDecoder(r.Body).Decode(&sms)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	if false ||
+		!utf8.ValidString(sms.Text) ||
+		!utf8.ValidString(sms.Carrier) ||
+		!utf8.ValidString(sms.SIM) ||
+		!utf8.ValidString(sms.Sender) {
+		w.apiReply(writer, badRequest)
+		return
+	}
+
+	deliver := deliverCommand{sms: sms, result: make(chan deliveryResult)}
+	defer close(deliver.result)
+	w.deliverChan <- deliver
+	result := <-deliver.result
+	w.apiReply(writer, result)
+}
+
+func (w *worker) apiReply(writer http.ResponseWriter, result deliveryResult) {
+	writer.WriteHeader(http.StatusOK)
+	res := smsResponse{Result: &result}
+	resString, err := json.Marshal(res)
+	checkErr(err)
+	_, err = writer.Write(resString)
+	checkErr(err)
+}
+
+func (w *worker) handleEndpoints() {
+	http.HandleFunc("/api/sms", w.handleSMS)
+}
+
+func (w *worker) deliver(sms sms) deliveryResult {
+	chatID := w.chatForKey(sms.Key)
+	if chatID == nil {
+		return userNotFound
+	}
+
+	var lines []string
+	loc := time.FixedZone("", sms.Offset)
+	tm := time.Unix(sms.Timestamp, 0).In(loc)
+	lines = append(lines, tm.Format("2006-01-02 15:04:05"))
+	var sender = sms.Sender
+	var sim = sms.SIM
+	if sim == "" {
+		sim = sms.Carrier
+	}
+	if sim != "" {
+		sender = strings.Join([]string{sender, sim}, " ")
+	}
+	if sender != "" {
+		lines = append(lines, sender)
+	}
+
+	lines = append(lines, sms.Text)
+	text := strings.Join(lines, "\n")
+
+	if err := w.sendText(*chatID, true, parseRaw, text); err != nil {
+		switch err {
+		case errBlockedByUser:
+			return blocked
+		default:
+			return networkError
+		}
+	}
+	return delivered
+}
+
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	w := newWorker()
+	w.logConfig()
+	w.setWebhook()
+	w.createDatabase()
+	incoming := w.bot.ListenForWebhook(w.cfg.Host + w.cfg.ListenPath)
+
+	go func() {
+		checkErr(http.ListenAndServe(w.cfg.ListenAddress, nil))
+	}()
+
+	w.handleEndpoints()
+
+	signals := make(chan os.Signal, 16)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
+	for {
+		select {
+		case s := <-w.deliverChan:
+			s.result <- w.deliver(s.sms)
+		case m := <-incoming:
+			w.processTGUpdate(m)
+		case s := <-signals:
+			linf("got signal %v", s)
+			w.removeWebhook()
+			return
+		}
+	}
+}
