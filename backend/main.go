@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"math/rand"
 	"net/http"
 	"os"
@@ -456,10 +457,10 @@ func (w *worker) deliver(sms sms) deliveryResult {
 	loc := time.FixedZone("", sms.Offset)
 	tm := time.Unix(sms.Timestamp, 0).In(loc)
 	lines = append(lines, tm.Format("2006-01-02 15:04:05"))
-	var sender = sms.Sender
-	var sim = sms.SIM
+	var sender = html.EscapeString(sms.Sender)
+	var sim = html.EscapeString(sms.SIM)
 	if sim == "" {
-		sim = sms.Carrier
+		sim = html.EscapeString(sms.Carrier)
 	}
 	if sim != "" {
 		sender = strings.Join([]string{sender, sim}, " ")
@@ -468,10 +469,14 @@ func (w *worker) deliver(sms sms) deliveryResult {
 		lines = append(lines, sender)
 	}
 
-	lines = append(lines, sms.Text)
+	for i, l := range lines {
+		lines[i] = "<i>" + l + "</i>"
+	}
+
+	lines = append(lines, html.EscapeString(sms.Text))
 	text := strings.Join(lines, "\n")
 
-	if err := w.sendText(*chatID, true, parseRaw, text); err != nil {
+	if err := w.sendText(*chatID, true, parseHTML, text); err != nil {
 		switch err {
 		case errBlockedByUser:
 			return blocked
