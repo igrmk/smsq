@@ -257,9 +257,6 @@ func (w *worker) broadcast(text string) {
 	if text == "" {
 		return
 	}
-	if w.cfg.Debug {
-		ldbg("broadcasting")
-	}
 	chats := w.broadcastChats()
 	for _, chatID := range chats {
 		_ = w.sendText(chatID, true, parseRaw, text)
@@ -422,9 +419,12 @@ func (w *worker) handleSMS(writer http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.ldbg("got new SMS")
+
 	var sms sms
 	err := json.NewDecoder(r.Body).Decode(&sms)
 	if err != nil {
+		w.ldbg("cannot decode SMS")
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -436,6 +436,7 @@ func (w *worker) handleSMS(writer http.ResponseWriter, r *http.Request) {
 		!utf8.ValidString(sms.SIM) ||
 		!utf8.ValidString(sms.Sender) {
 		w.apiReply(writer, badRequest)
+		lerr("invalid text")
 		return
 	}
 
@@ -452,20 +453,25 @@ func (w *worker) handleV1SMS(writer http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.ldbg("got new SMS")
+
 	var request smsRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		w.ldbg("cannot decode v1 request")
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if request.Version != 1 {
+		lerr("version is not 1")
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	decrypted, err := w.decrypt(request.Payload)
 	if err != nil {
+		lerr("decryption error")
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -473,6 +479,7 @@ func (w *worker) handleV1SMS(writer http.ResponseWriter, r *http.Request) {
 	var sms sms
 	err = json.NewDecoder(bytes.NewReader(decrypted)).Decode(&sms)
 	if err != nil {
+		lerr("cannot decode SMS")
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -484,6 +491,7 @@ func (w *worker) handleV1SMS(writer http.ResponseWriter, r *http.Request) {
 		!utf8.ValidString(sms.SIM) ||
 		!utf8.ValidString(sms.Sender) {
 		w.apiReply(writer, badRequest)
+		lerr("invalid text")
 		return
 	}
 
@@ -511,6 +519,7 @@ func (w *worker) handleEndpoints() {
 func (w *worker) deliver(sms sms) deliveryResult {
 	chatID := w.chatForKey(sms.Key)
 	if chatID == nil {
+		w.ldbg("cannot found user")
 		return userNotFound
 	}
 

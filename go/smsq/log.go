@@ -9,4 +9,8 @@ func lerr(format string, v ...interface{}) { log.Printf("[ERROR] "+format, v...)
 func linf(format string, v ...interface{}) { log.Printf("[INFO] "+format, v...) }
 
 // ldbg logs a debug message
-func ldbg(format string, v ...interface{}) { log.Printf("[DEBUG] "+format, v...) }
+func (w *worker) ldbg(format string, v ...interface{}) {
+	if w.cfg.Debug {
+		log.Printf("[DEBUG] "+format, v...)
+	}
+}
