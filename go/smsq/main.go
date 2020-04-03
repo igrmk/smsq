@@ -1,13 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +20,8 @@ import (
 	"unicode/utf8"
 
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/google/tink/go/hybrid"
+	"github.com/google/tink/go/tink"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -29,6 +32,11 @@ func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+type smsRequest struct {
+	Payload string
+	Version int
 }
 
 type sms struct {
@@ -69,6 +77,7 @@ type worker struct {
 	cfg         *config
 	client      *http.Client
 	deliverChan chan deliverCommand
+	decryptor   tink.HybridDecrypt
 }
 
 func newWorker() *worker {
@@ -81,12 +90,15 @@ func newWorker() *worker {
 	checkErr(err)
 	db, err := sql.Open("sqlite3", cfg.DBPath)
 	checkErr(err)
+	decryptor, err := hybrid.NewHybridDecrypt(cfg.privateKey)
+	checkErr(err)
 	w := &worker{
 		bot:         bot,
 		db:          db,
 		cfg:         cfg,
 		client:      client,
 		deliverChan: make(chan deliverCommand),
+		decryptor:   decryptor,
 	}
 
 	return w
@@ -434,6 +446,54 @@ func (w *worker) handleSMS(writer http.ResponseWriter, r *http.Request) {
 	w.apiReply(writer, result)
 }
 
+func (w *worker) handleV1SMS(writer http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(writer, "404 not found", http.StatusNotFound)
+		return
+	}
+
+	var request smsRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if request.Version != 1 {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	decrypted, err := w.decrypt(request.Payload)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var sms sms
+	err = json.NewDecoder(bytes.NewReader(decrypted)).Decode(&sms)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	if false ||
+		!utf8.ValidString(sms.Text) ||
+		!utf8.ValidString(sms.Carrier) ||
+		!utf8.ValidString(sms.SIM) ||
+		!utf8.ValidString(sms.Sender) {
+		w.apiReply(writer, badRequest)
+		return
+	}
+
+	deliver := deliverCommand{sms: sms, result: make(chan deliveryResult)}
+	defer close(deliver.result)
+	w.deliverChan <- deliver
+	result := <-deliver.result
+	w.apiReply(writer, result)
+}
+
 func (w *worker) apiReply(writer http.ResponseWriter, result deliveryResult) {
 	writer.WriteHeader(http.StatusOK)
 	res := smsResponse{Result: &result}
@@ -445,6 +505,7 @@ func (w *worker) apiReply(writer http.ResponseWriter, result deliveryResult) {
 
 func (w *worker) handleEndpoints() {
 	http.HandleFunc("/api/sms", w.handleSMS)
+	http.HandleFunc("/api/v1/sms", w.handleV1SMS)
 }
 
 func (w *worker) deliver(sms sms) deliveryResult {
@@ -487,8 +548,19 @@ func (w *worker) deliver(sms sms) deliveryResult {
 	return delivered
 }
 
+func (w *worker) decrypt(str string) ([]byte, error) {
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return nil, err
+	}
+	result, err := w.decryptor.Decrypt(data, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func main() {
-	rand.Seed(time.Now().UnixNano())
 	w := newWorker()
 	w.logConfig()
 	w.setWebhook()

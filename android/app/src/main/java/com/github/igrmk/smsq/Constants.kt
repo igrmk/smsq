@@ -1,5 +1,8 @@
 package com.github.igrmk.smsq
 
+import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.JsonKeysetReader
+
 object Constants {
     const val DEFAULT_BASE_URL = "https://smsq.me"
     const val PREFERENCES = "com.github.igrmk.smsq.preferences"
@@ -12,4 +15,23 @@ object Constants {
     const val KEY_LENGTH = 64
     const val PERMISSIONS_SMS = 1
     const val PERMISSIONS_STATE = 2
+
+    @Suppress("SpellCheckingInspection")
+    const val PUBLIC_KEY_STRING = """
+        {
+            "primaryKeyId": 437945208,
+            "key": [{
+                "keyData": {
+                    "typeUrl": "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPublicKey",
+                    "keyMaterialType": "ASYMMETRIC_PUBLIC",
+                    "value": "EkQKBAgCEAMSOhI4CjB0eXBlLmdvb2dsZWFwaXMuY29tL2dvb2dsZS5jcnlwdG8udGluay5BZXNHY21LZXkSAhAQGAEYARohAL5Hc2sNbnpUuQeeWIfKEl+z2kK3GJ0l89k7mLqPRThgIiAOIT5bEubS/FLebsJ7usAsxxIIjNCXVj3975enYg1ssA=="
+                },
+                "outputPrefixType": "TINK",
+                "keyId": 437945208,
+                "status": "ENABLED"
+            }]
+        }
+    """
+
+    val PUBLIC_KEY = CleartextKeysetHandle.read(JsonKeysetReader.withBytes(PUBLIC_KEY_STRING.toByteArray()))!!
 }

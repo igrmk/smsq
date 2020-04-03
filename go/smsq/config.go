@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/google/tink/go/insecurecleartextkeyset"
+	"github.com/google/tink/go/keyset"
 )
 
 type config struct {
@@ -17,6 +22,8 @@ type config struct {
 	AdminID        int64  `json:"admin_id"`        // admin telegram ID
 	DBPath         string `json:"db_path"`         // path to the database
 	Debug          bool   `json:"debug"`           // debug mode
+	PrivateKey     string `json:"private_key"`     // private key
+	privateKey     *keyset.Handle
 }
 
 func readConfig(path string) *config {
@@ -33,6 +40,9 @@ func parseConfig(r io.Reader) *config {
 	err := decoder.Decode(cfg)
 	checkErr(err)
 	checkErr(checkConfig(cfg))
+	privateKey, err := parsePrivateKey(cfg.PrivateKey)
+	checkErr(err)
+	cfg.privateKey = privateKey
 	return cfg
 }
 
@@ -58,5 +68,20 @@ func checkConfig(cfg *config) error {
 	if cfg.Host == "" {
 		return errors.New("configure host")
 	}
+	if cfg.PrivateKey == "" {
+		return errors.New("configure private_key")
+	}
 	return nil
+}
+
+func parsePrivateKey(file string) (*keyset.Handle, error) {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	kh, err := insecurecleartextkeyset.Read(keyset.NewJSONReader(bytes.NewReader(data)))
+	if err != nil {
+		return nil, err
+	}
+	return kh, nil
 }
