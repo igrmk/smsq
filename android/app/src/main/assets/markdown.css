@@ -1,0 +1,29 @@
+@charset "utf-8";
+
+body {
+    font-family: Helvetica, Arial, Freesans, clean, sans-serif;
+    padding:1em;
+    margin:auto;
+    max-width:42em;
+    background:#4a5050;
+    color:#dddddd
+}
+
+h1, h2 {
+    font-weight: bold;
+}
+
+h1 {
+    margin-top: 30px;
+    font-size: 28px;
+}
+
+h2 {
+    margin-top: 50px;
+    font-size: 22px;
+}
+
+p, blockquote, ul, ol, dl, li, table, pre {
+    margin: 15px 0;
+}
+

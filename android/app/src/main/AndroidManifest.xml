@@ -18,17 +18,19 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+        <activity android:name=".activities.PrivacyActivity"></activity>
         <activity
             android:name=".activities.WelcomeActivity"
             android:configChanges="orientation"
-            android:noHistory="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service android:name=".services.ResenderService" />
 
         <receiver
@@ -54,4 +56,5 @@
             </intent-filter>
         </receiver>
     </application>
+
 </manifest>

@@ -1,6 +1,5 @@
 PRIVACY POLICY
 ==============
-
 This Privacy Policy is meant to help you understand what information we collect and why we collect it.
 We only collect information that is essential for core functionality of our service.
 Our service is intended to push your SMS messages to your Telegram Messenger so we collect:

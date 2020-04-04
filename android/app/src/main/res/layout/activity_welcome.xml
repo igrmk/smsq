@@ -18,9 +18,9 @@
         android:onClick="onStartClicked"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toTopOf="@id/start"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_max="300dp"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_max="300dp"
         app:srcCompat="@drawable/ic_off" />
@@ -34,8 +34,8 @@
         android:onClick="onStartClicked"
         android:text="@string/start"
         app:layout_constraintBottom_toTopOf="@id/connect"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 
     <Button
         android:id="@+id/connect"
@@ -47,8 +47,8 @@
         android:onClick="onConnectClicked"
         android:text="@string/connect"
         app:layout_constraintBottom_toTopOf="@id/revokeButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 
     <Button
         android:id="@+id/revokeButton"
@@ -60,30 +60,53 @@
         android:onClick="onRevokeClicked"
         android:text="@string/revoke"
         app:layout_constraintBottom_toTopOf="@id/showCarrier"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/showCarrier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/carrier_margin"
-        android:onClick="onCarrierClicked"
         android:width="200dp"
+        android:onClick="onCarrierClicked"
         android:text="@string/show_carrier"
         app:layout_constraintBottom_toTopOf="@id/version"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 
-    <TextView
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/app_name_version"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/version_name"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <Button
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:background="@android:color/transparent"
+            android:minHeight="0dp"
+            android:onClick="onPrivacyClick"
+            android:text="@string/privacy_policy"
+            android:textColor="@color/colorAccent"
+            android:textSize="15sp"
+            tools:ignore="RtlHardcoded" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

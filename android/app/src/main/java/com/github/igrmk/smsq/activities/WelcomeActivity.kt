@@ -174,4 +174,8 @@ class WelcomeActivity : AppCompatActivity() {
                 }
         }
     }
+
+    fun onPrivacyClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        startActivity(Intent(this, PrivacyActivity::class.java))
+    }
 }
