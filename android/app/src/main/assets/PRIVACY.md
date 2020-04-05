@@ -1,5 +1,6 @@
 PRIVACY POLICY
 ==============
+
 This Privacy Policy is meant to help you understand what information we collect and why we collect it.
 We only collect information that is essential for core functionality of our service.
 Our service is intended to push your SMS messages to your Telegram Messenger so we collect:
@@ -12,7 +13,7 @@ Our service is intended to push your SMS messages to your Telegram Messenger so 
   * Your carrier name (if you choose to show carrier)
 
 We do not store personal or sensitive information on our servers including all the data listed above except your Telegram chat ID.
-Data listed above except Telegram chat ID is collected in the temporary storage in your phone until it reach Telegram Messenger servers.
+Data listed above except Telegram chat ID is collected in the temporary storage in your phone until it reachs Telegram Messenger servers.
 Afterwards it is removed from this storage.
 On the server we store only your Telegram chat ID.
 We will not share your information with anyone except Telegram Messenger.
