@@ -34,3 +34,10 @@ var SharedPreferences.showCarrier: Boolean
         putBoolean(Constants.PREF_CARRIER, value)
         apply()
     }
+
+var SharedPreferences.consent: Boolean
+    get() = getBoolean(Constants.PREF_CONSENT, false)
+    set(value) = with(edit()) {
+        putBoolean(Constants.PREF_CONSENT, value)
+        apply()
+    }

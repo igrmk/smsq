@@ -30,6 +30,14 @@ class WelcomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        resume()
+    }
+
+    private fun resume() {
+        if (!myPreferences.consent) {
+            consentAlert()
+            return
+        }
         if (myPreferences.on) {
             checkStart()
         }
@@ -112,6 +120,14 @@ class WelcomeActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
                 .setMessage("Please install Telegram to connect the bot")
                 .setPositiveButton(android.R.string.ok, null)
+                .show()
+    }
+
+    private fun consentAlert() {
+        AlertDialog.Builder(this)
+                .setMessage("Allow this application to read new SMS messages including their text, sender information, time and carrier name?")
+                .setPositiveButton(android.R.string.yes) { _, _ -> myPreferences.consent = true; resume() }
+                .setNegativeButton(android.R.string.no) { _, _ -> finish() }
                 .show()
     }
 

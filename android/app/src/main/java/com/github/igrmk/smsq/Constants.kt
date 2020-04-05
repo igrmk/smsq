@@ -10,6 +10,7 @@ object Constants {
     const val PREF_KEY = "key"
     const val PREF_ON = "on"
     const val PREF_CARRIER = "show_carrier"
+    const val PREF_CONSENT = "consent"
     const val SOCKET_TIMEOUT_MS = 10000
     val RESEND_PERIOD_MS = arrayOf(5L * 60 * 1000, 15L * 60 * 1000, 45L * 60 * 1000)
     const val KEY_LENGTH = 64
