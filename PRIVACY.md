@@ -39,6 +39,8 @@ But remember that no method of transmission over the internet, or method of elec
 CHANGES TO THIS PRIVACY POLICY
 ------------------------------
 We may update our Privacy Policy from time to time.
-Thus, you are advised to review this page periodically for any changes.
+Thus, you are advised to review online privacy policy page shown below periodically for any changes.
 We will notify you of any changes by posting the new Privacy Policy on this page.
 These changes are effective immediately after they are posted on this page.
+
+__[PRIVACY POLICY ONLINE](https://github.com/igrmk/smsq/blob/master/PRIVACY.md)__
