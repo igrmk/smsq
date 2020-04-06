@@ -7,6 +7,8 @@ import com.github.igrmk.smsq.entities.Sms
 import org.jetbrains.anko.db.*
 
 class DbHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "database", version = BuildConfig.VERSION_CODE) {
+    private val tag = this::class.simpleName!!
+
     companion object {
         const val TABLE_SMS = "sms"
         const val COLUMN_SMS_ID = "id"

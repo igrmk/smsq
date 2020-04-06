@@ -18,9 +18,12 @@ class RestTalker(private val baseUrl: String) {
     private inline fun <U, reified T : BasicResponse<U>> checkErrors(request: Request, result: Result<String, FuelError>): Pair<U?, Boolean> {
         val obj: BasicResponse<U>
         val (data, error) = result
-        ldbg(tag, "sent request: '${request.url}'")
-        ldbg(tag, "got response: '$data'")
+        linf(tag, "sent request: '${request.url}'")
+        if (error == null) {
+            linf(tag, "got response: '$data'")
+        }
         if (error != null) {
+            linf(tag, "got error: $error")
             return Pair(null, false)
         }
         try {
@@ -37,18 +40,20 @@ class RestTalker(private val baseUrl: String) {
     }
 
     fun postSms(data: SmsRequest): Pair<DeliveryResult?, Boolean> {
-        val json = gson.toJson(data)
-        val request = Request().apply {
-            this.payload = encrypt(json)
-        }
         val (req, _, result) = Fuel
                 .post(postSmsUrl(baseUrl))
-                .body(gson.toJson(request))
+                .body(body(data))
                 .header("Content-Type" to "application/json")
                 .timeout(Constants.SOCKET_TIMEOUT_MS)
                 .timeoutRead(Constants.SOCKET_TIMEOUT_MS)
                 .responseString()
         return checkErrors<DeliveryResult, SmsResponse>(req, result)
+    }
+
+    private fun body(data: Any): String {
+        val payloadJson = gson.toJson(data)
+        val request = Request().apply { this.payload = encrypt(payloadJson) }
+        return gson.toJson(request)
     }
 
     private fun encrypt(str: String): String {

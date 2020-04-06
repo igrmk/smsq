@@ -12,7 +12,7 @@ import com.github.igrmk.smsq.helpers.*
 import kotlin.math.min
 
 class ResenderService : Service() {
-    private val tag = this::class.simpleName
+    private val tag = this::class.simpleName!!
 
     private lateinit var handler: Handler
     private val handlerThread = HandlerThread(this::class.simpleName)
@@ -22,6 +22,7 @@ class ResenderService : Service() {
 
     override fun onBind(intent: Intent): IBinder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        linf(tag, "starting service...")
         super.onStartCommand(intent, flags, startId)
         handler.post {
             resendAttempt = 0
@@ -32,6 +33,7 @@ class ResenderService : Service() {
     }
 
     override fun onCreate() {
+        linf(tag, "creating service...")
         super.onCreate()
         rest = RestTalker(myPreferences.baseUrl)
         handlerThread.start()
@@ -39,17 +41,22 @@ class ResenderService : Service() {
     }
 
     override fun onDestroy() {
+        linf(tag, "destroying service...")
         super.onDestroy()
         handlerThread.quit()
     }
 
     private fun resend() {
+        linf(tag, "resending...")
         if (send()) {
+            linf(tag, "resending done")
             stopSelf()
             return
         }
-        val period = Constants.RESEND_PERIOD_MS
-        handler.postDelayed(resendRunnable, period[min(resendAttempt, period.size - 1)])
+        val periods = Constants.RESEND_PERIOD_MS
+        val period = periods[min(resendAttempt, periods.size - 1)]
+        linf(tag, "let us retry send in $period ms")
+        handler.postDelayed(resendRunnable, period)
         resendAttempt++
     }
 
@@ -57,10 +64,20 @@ class ResenderService : Service() {
         val key = myPreferences.key ?: return true
         for (i in allSmses()) {
             val req = SmsRequest(i).apply { this.key = key }
-            val res = rest.postSms(req)
-            if (!res.second || res.first == DeliveryResult.NetworkError) {
+            val (deliveryResult, gotReply) = rest.postSms(req)
+            if (!gotReply) {
+                linf(tag, "send failed")
                 return false
             }
+            if (deliveryResult == null) {
+                linf(tag, "send result: API error")
+                return false
+            }
+            linf(tag, "send result: $deliveryResult")
+            if (deliveryResult == DeliveryResult.NetworkError) {
+                return false
+            }
+            linf(tag, "SMS processed, removing...")
             deleteSms(req.id)
         }
         return true

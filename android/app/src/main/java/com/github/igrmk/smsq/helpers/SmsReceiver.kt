@@ -17,7 +17,7 @@ import java.util.*
 
 
 class SmsReceiver : BroadcastReceiver() {
-    private val tag: String = this::class.simpleName!!
+    private val tag = this::class.simpleName!!
 
     private fun simInfo(context: Context, slot: Int): SubscriptionInfo? {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -31,6 +31,7 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        linf(tag, "action received: ${intent.action}, on: ${context.myPreferences.on}")
         if (!context.myPreferences.on) {
             return
         }
@@ -39,7 +40,6 @@ class SmsReceiver : BroadcastReceiver() {
             return
         }
 
-        ldbg(tag, "action received: " + intent.action)
         val extras = intent.extras!!
         val slot = extras.getInt("slot", -1)
         val simInfo = if (slot >= 0) simInfo(context, slot) else null

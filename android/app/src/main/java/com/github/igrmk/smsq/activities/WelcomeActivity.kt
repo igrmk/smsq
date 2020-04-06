@@ -20,6 +20,8 @@ import com.github.igrmk.smsq.services.ResenderService
 import kotlinx.android.synthetic.main.activity_welcome.*
 
 class WelcomeActivity : AppCompatActivity() {
+    private val tag = this::class.simpleName!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_welcome)
@@ -29,6 +31,7 @@ class WelcomeActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        linf(tag, "resuming activity...")
         super.onResume()
         resume()
     }
