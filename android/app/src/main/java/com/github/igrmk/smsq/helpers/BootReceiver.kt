@@ -9,7 +9,7 @@ class BootReceiver : BroadcastReceiver() {
     private val tag = this::class.simpleName!!
 
     override fun onReceive(context: Context, intent: Intent) {
-        linf(tag, "action received: ${intent.action}, on: ${context.myPreferences.on}")
+        context.linf(tag, "action received: ${intent.action}, on: ${context.myPreferences.on}")
         if (!context.myPreferences.on) {
             return
         }

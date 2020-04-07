@@ -1,5 +1,6 @@
 package com.github.igrmk.smsq.helpers
 
+import android.content.Context
 import com.github.igrmk.smsq.Constants
 import com.github.igrmk.smsq.entities.*
 import com.github.kittinunf.fuel.Fuel
@@ -10,7 +11,7 @@ import com.google.crypto.tink.HybridEncrypt
 import com.google.gson.Gson
 import com.google.gson.JsonParseException
 
-class RestTalker(private val baseUrl: String) {
+class RestTalker(private val context: Context, private val baseUrl: String) {
     private val tag = this::class.simpleName!!
     private val gson = Gson()
     private val hybridEncrypt = Constants.PUBLIC_KEY.getPrimitive(HybridEncrypt::class.java)
@@ -18,22 +19,22 @@ class RestTalker(private val baseUrl: String) {
     private inline fun <U, reified T : BasicResponse<U>> checkErrors(request: Request, result: Result<String, FuelError>): Pair<U?, Boolean> {
         val obj: BasicResponse<U>
         val (data, error) = result
-        linf(tag, "sent request: '${request.url}'")
+        context.linf(tag, "sent request: '${request.url}'")
         if (error == null) {
-            linf(tag, "got response: '$data'")
+            context.linf(tag, "got response: '$data'")
         }
         if (error != null) {
-            linf(tag, "got error: $error")
+            context.linf(tag, "got error: $error")
             return Pair(null, false)
         }
         try {
             obj = gson.fromJson(data, T::class.java)
         } catch (_: JsonParseException) {
-            lerr(tag, "REST API error: cannot parse")
+            context.lerr(tag, "REST API error: cannot parse")
             return Pair(null, false)
         }
         if (obj.error != null || obj.result == null) {
-            lerr(tag, "REST API error: ${obj.error}")
+            context.lerr(tag, "REST API error: ${obj.error}")
             return Pair(null, true)
         }
         return Pair(obj.result, true)

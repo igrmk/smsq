@@ -35,7 +35,7 @@ class ResenderService : Service() {
     override fun onCreate() {
         linf(tag, "creating service...")
         super.onCreate()
-        rest = RestTalker(myPreferences.baseUrl)
+        rest = RestTalker(this, myPreferences.baseUrl)
         handlerThread.start()
         handler = Handler(handlerThread.looper)
     }

@@ -31,7 +31,7 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        linf(tag, "action received: ${intent.action}, on: ${context.myPreferences.on}")
+        context.linf(tag, "action received: ${intent.action}, on: ${context.myPreferences.on}")
         if (!context.myPreferences.on) {
             return
         }
@@ -59,7 +59,7 @@ class SmsReceiver : BroadcastReceiver() {
                 SmsMessage.createFromPdu(bytes)
         }
         if (parts.isEmpty()) {
-            lerr(tag, "empty message")
+            context.lerr(tag, "empty message")
             return
         }
         val text = parts.joinToString(separator = "") { it!!.messageBody }

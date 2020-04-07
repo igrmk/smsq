@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +22,9 @@ import kotlinx.android.synthetic.main.activity_welcome.*
 
 class WelcomeActivity : AppCompatActivity() {
     private val tag = this::class.simpleName!!
+    private val versionClickHandler = Handler()
+    private var versionClicks = 0
+    private val decreaseVersionClicks = Runnable { versionClicks-- }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +40,13 @@ class WelcomeActivity : AppCompatActivity() {
         resume()
     }
 
+    override fun onPause() {
+        super.onPause()
+        versionClickHandler.removeCallbacks(decreaseVersionClicks)
+    }
+
     private fun resume() {
+        versionClicks = 0
         if (!myPreferences.consent) {
             consentAlert()
             return
@@ -196,5 +206,13 @@ class WelcomeActivity : AppCompatActivity() {
 
     fun onPrivacyClick(@Suppress("UNUSED_PARAMETER") view: View) {
         startActivity(Intent(this, PrivacyActivity::class.java))
+    }
+
+    fun onVersionClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        versionClicks++
+        versionClickHandler.postDelayed(decreaseVersionClicks, 2000)
+        if (versionClicks == 5) {
+            startActivity(Intent(this, DebugActivity::class.java))
+        }
     }
 }

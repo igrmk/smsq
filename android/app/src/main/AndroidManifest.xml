@@ -18,7 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
-        <activity android:name=".activities.PrivacyActivity"></activity>
+        <activity android:name=".activities.DebugActivity" />
+        <activity android:name=".activities.PrivacyActivity" />
         <activity
             android:name=".activities.WelcomeActivity"
             android:configChanges="orientation"

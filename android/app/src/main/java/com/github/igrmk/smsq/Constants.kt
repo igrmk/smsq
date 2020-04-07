@@ -4,6 +4,8 @@ import com.google.crypto.tink.CleartextKeysetHandle
 import com.google.crypto.tink.JsonKeysetReader
 
 object Constants {
+    const val LOG_HALVING_SIZE = 100000
+    const val LOG_FILE_NAME = "log"
     const val DEFAULT_BASE_URL = "https://smsq.me"
     const val PREFERENCES = "com.github.igrmk.smsq.preferences"
     const val PREF_BASE_URL = "base_url"
