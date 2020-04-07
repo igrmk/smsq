@@ -47,7 +47,7 @@ class SimpleFileLogger(
             writer?.close()
             writer = null
             val text = file.readText()
-            writer = BufferedWriter(FileWriter(file, true))
+            writer = BufferedWriter(FileWriter(file, false))
             val half = text.indexOf(newline, halvingSize / 2)
             if (half >= 0) {
                 writer!!.append(text.substring(half + newline.length)).flush()
