@@ -10,8 +10,8 @@ android {
         applicationId "com.github.igrmk.smsq"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 5
-        versionName "0.5"
+        versionCode 6
+        versionName "0.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -46,4 +46,5 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.google.crypto.tink:tink-android:1.3.0'
     implementation 'us.feras.mdv:markdownview:1.1.0'
+    implementation 'com.github.igrmk:dull:1.0'
 }

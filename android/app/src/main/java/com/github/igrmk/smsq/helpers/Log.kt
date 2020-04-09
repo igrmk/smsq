@@ -34,35 +34,3 @@ fun Context.ldbg(tag: String, msg: String) {
     }
 }
 
-class SimpleFileLogger(
-        private val file: File,
-        private val halvingSize: Int,
-        private val newline: String = System.lineSeparator()) {
-
-    private var writer: BufferedWriter? = null
-    private var lock = ReentrantLock()
-
-    private fun prepare() {
-        if (file.length() > halvingSize) {
-            writer?.close()
-            writer = null
-            val text = file.readText()
-            writer = BufferedWriter(FileWriter(file, false))
-            val half = text.indexOf(newline, halvingSize / 2)
-            if (half >= 0) {
-                writer!!.append(text.substring(half + newline.length)).flush()
-            }
-        }
-        writer = writer ?: BufferedWriter(FileWriter(file, true))
-    }
-
-    fun append(text: String): Unit = lock.withLock {
-        prepare()
-        writer!!.append(text).append(newline)
-    }
-
-    fun get(): String = lock.withLock {
-        writer?.flush()
-        return file.readText()
-    }
-}
