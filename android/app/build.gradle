@@ -4,6 +4,9 @@ plugins {
     id 'kotlin-android-extensions'
 }
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -19,15 +22,26 @@ android {
         variant.resValue "string", "version_name", "smsQ " + variant.versionName
         variant.outputs.all { outputFileName = "smsq-${variant.name}-${variant.versionName}.apk" }
     }
+    signingConfigs {
+        play {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
     buildTypes {
+        play {
+            minifyEnabled true
+            debuggable false
+            signingConfig signingConfigs.play
+        }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             debuggable false
         }
         debug {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             debuggable true
         }
     }
