@@ -4,17 +4,14 @@ plugins {
     id 'kotlin-android-extensions'
 }
 
-def keystorePropertiesFile = rootProject.file("keystore.properties")
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.github.igrmk.smsq"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 7
-        versionName "0.7"
+        versionCode 8
+        versionName "0.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -23,12 +20,7 @@ android {
         variant.outputs.all { outputFileName = "smsq-${variant.name}-${variant.versionName}.apk" }
     }
     signingConfigs {
-        play {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-        }
+        play
     }
     buildTypes {
         play {
@@ -61,4 +53,16 @@ dependencies {
     implementation 'com.google.crypto.tink:tink-android:1.3.0'
     implementation 'us.feras.mdv:markdownview:1.1.0'
     implementation 'com.github.igrmk:dull:1.0'
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.canRead()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    android.signingConfigs.play.storeFile = file(keystoreProperties['storeFile'])
+    android.signingConfigs.play.storePassword = keystoreProperties['storePassword']
+    android.signingConfigs.play.keyAlias = keystoreProperties['keyAlias']
+    android.signingConfigs.play.keyPassword = keystoreProperties['keyPassword']
+} else {
+    android.buildTypes.release.signingConfig = null
 }
