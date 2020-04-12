@@ -24,7 +24,7 @@ android {
     }
     buildTypes {
         play {
-            minifyEnabled true
+            minifyEnabled false
             debuggable false
             signingConfig signingConfigs.play
         }
