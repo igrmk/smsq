@@ -19,6 +19,7 @@ import com.github.igrmk.smsq.R
 import com.github.igrmk.smsq.helpers.*
 import com.github.igrmk.smsq.services.ResenderService
 import kotlinx.android.synthetic.main.activity_welcome.*
+import android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION
 
 class WelcomeActivity : AppCompatActivity() {
     private val tag = this::class.simpleName!!
@@ -47,6 +48,7 @@ class WelcomeActivity : AppCompatActivity() {
 
     private fun resume() {
         versionClicks = 0
+        logSmsReceivers()
         if (!myPreferences.consent) {
             consentAlert()
             return
@@ -56,6 +58,15 @@ class WelcomeActivity : AppCompatActivity() {
         }
         if (myPreferences.showCarrier) {
             checkShowCarrierSwitch()
+        }
+    }
+
+    private fun logSmsReceivers() {
+        val intent = Intent(SMS_RECEIVED_ACTION)
+        val infos = packageManager.queryBroadcastReceivers(intent, 0)
+        linf(tag, "SMS receivers:")
+        for (info in infos) {
+            linf(tag, "name: ${info.activityInfo.name}, priority: ${info.priority}")
         }
     }
 
