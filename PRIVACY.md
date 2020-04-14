@@ -13,7 +13,7 @@ Our service is intended to push your SMS messages to your Telegram Messenger so 
   * Your carrier name (if you choose to show carrier)
 
 We do not store personal or sensitive information on our servers including all the data listed above except your Telegram chat ID.
-Data listed above except Telegram chat ID is collected in the temporary storage in your phone until it reachs Telegram Messenger servers.
+Data listed above except Telegram chat ID is collected in the temporary storage in your phone until it reaches Telegram Messenger servers.
 Afterwards it is removed from this storage.
 On the server we store only your Telegram chat ID.
 We will not share your information with anyone except Telegram Messenger.
