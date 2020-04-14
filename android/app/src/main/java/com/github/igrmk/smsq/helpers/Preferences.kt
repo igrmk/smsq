@@ -14,10 +14,10 @@ var SharedPreferences.key: String?
         apply()
     }
 
-var SharedPreferences.baseUrl: String
-    get() = getString(Constants.PREF_BASE_URL, Constants.DEFAULT_BASE_URL)!!
+var SharedPreferences.domainName: String
+    get() = getString(Constants.PREF_DOMAIN_NAME, Constants.DEFAULT_DOMAIN_NAME)!!
     set(value) = with(edit()) {
-        putString(Constants.PREF_BASE_URL, value)
+        putString(Constants.PREF_DOMAIN_NAME, value)
         apply()
     }
 

@@ -14,12 +14,12 @@ import (
 )
 
 type config struct {
-	ListenPath     string `json:"listen_path"`     // the path excluding domain to listen to, the good choice is "/your-telegram-bot-token"
-	ListenAddress  string `json:"listen_address"`  // the address to listen to incoming telegram messages
-	Host           string `json:"host"`            // the host name for the email addresses and the webhook
-	BotToken       string `json:"bot_token"`       // your telegram bot token
+	ListenAddress  string `json:"listen_address"`  // the address to listen to incoming Telegram messages
+	APIDomain      string `json:"api_domain"`      // the domain name for API
+	WebhookDomain  string `json:"webhook_domain"`  // the domain name for the webhook
+	BotToken       string `json:"bot_token"`       // your Telegram bot token
 	TimeoutSeconds int    `json:"timeout_seconds"` // HTTP timeout
-	AdminID        int64  `json:"admin_id"`        // admin telegram ID
+	AdminID        int64  `json:"admin_id"`        // admin Telegram ID
 	DBPath         string `json:"db_path"`         // path to the database
 	Debug          bool   `json:"debug"`           // debug mode
 	PrivateKey     string `json:"private_key"`     // private key
@@ -50,9 +50,6 @@ func checkConfig(cfg *config) error {
 	if cfg.ListenAddress == "" {
 		return errors.New("configure listen_address")
 	}
-	if cfg.ListenPath == "" {
-		return errors.New("configure listen_path")
-	}
 	if cfg.BotToken == "" {
 		return errors.New("configure bot_token")
 	}
@@ -65,8 +62,11 @@ func checkConfig(cfg *config) error {
 	if cfg.DBPath == "" {
 		return errors.New("configure db_path")
 	}
-	if cfg.Host == "" {
-		return errors.New("configure host")
+	if cfg.APIDomain == "" {
+		return errors.New("configure api_domain")
+	}
+	if cfg.WebhookDomain == "" {
+		return errors.New("configure webhook_domain")
 	}
 	if cfg.PrivateKey == "" {
 		return errors.New("configure private_key")

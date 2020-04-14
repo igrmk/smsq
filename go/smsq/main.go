@@ -129,7 +129,7 @@ func (w *worker) logConfig() {
 
 func (w *worker) setWebhook() {
 	linf("setting webhook...")
-	_, err := w.bot.SetWebhook(tg.NewWebhook(path.Join(w.cfg.Host, w.cfg.ListenPath)))
+	_, err := w.bot.SetWebhook(tg.NewWebhook(path.Join(w.cfg.WebhookDomain, w.cfg.BotToken)))
 	checkErr(err)
 	info, err := w.bot.GetWebhookInfo()
 	checkErr(err)
@@ -166,7 +166,8 @@ func (w *worker) createDatabase() {
 	w.mustExec(`
 		create table if not exists users (
 			chat_id integer primary key,
-			key text not null default '');`)
+			key text not null default '',
+			delivered integer not null default 0);`)
 }
 
 func (w *worker) chatKey(chatID int64) *string {
@@ -413,40 +414,6 @@ func (w *worker) send(msg baseChattable) error {
 	return nil
 }
 
-func (w *worker) handleSMS(writer http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(writer, "404 not found", http.StatusNotFound)
-		return
-	}
-
-	w.ldbg("got new SMS")
-
-	var sms sms
-	err := json.NewDecoder(r.Body).Decode(&sms)
-	if err != nil {
-		w.ldbg("cannot decode SMS")
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	writer.Header().Set("Content-Type", "application/json")
-	if false ||
-		!utf8.ValidString(sms.Text) ||
-		!utf8.ValidString(sms.Carrier) ||
-		!utf8.ValidString(sms.SIM) ||
-		!utf8.ValidString(sms.Sender) {
-		w.apiReply(writer, badRequest)
-		lerr("invalid text")
-		return
-	}
-
-	deliver := deliverCommand{sms: sms, result: make(chan deliveryResult)}
-	defer close(deliver.result)
-	w.deliverChan <- deliver
-	result := <-deliver.result
-	w.apiReply(writer, result)
-}
-
 func (w *worker) handleV1SMS(writer http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(writer, "404 not found", http.StatusNotFound)
@@ -512,8 +479,7 @@ func (w *worker) apiReply(writer http.ResponseWriter, result deliveryResult) {
 }
 
 func (w *worker) handleEndpoints() {
-	http.HandleFunc("/api/sms", w.handleSMS)
-	http.HandleFunc("/api/v1/sms", w.handleV1SMS)
+	http.HandleFunc(path.Join(w.cfg.APIDomain, "/v1/sms"), w.handleV1SMS)
 }
 
 func (w *worker) deliver(sms sms) deliveryResult {
@@ -554,6 +520,7 @@ func (w *worker) deliver(sms sms) deliveryResult {
 			return networkError
 		}
 	}
+	w.mustExec("update users set delivered=delivered+1 where id=?", chatID)
 	return delivered
 }
 
@@ -574,13 +541,13 @@ func main() {
 	w.logConfig()
 	w.setWebhook()
 	w.createDatabase()
-	incoming := w.bot.ListenForWebhook(w.cfg.Host + w.cfg.ListenPath)
+
+	incoming := w.bot.ListenForWebhook(path.Join(w.cfg.WebhookDomain, w.cfg.BotToken))
+	w.handleEndpoints()
 
 	go func() {
 		checkErr(http.ListenAndServe(w.cfg.ListenAddress, nil))
 	}()
-
-	w.handleEndpoints()
 
 	signals := make(chan os.Signal, 16)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
