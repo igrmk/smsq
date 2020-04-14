@@ -5,7 +5,7 @@ This Privacy Policy is meant to help you understand what information we collect 
 We only collect information that is essential for core functionality of our service.
 Our service is intended to push your SMS messages to your Telegram Messenger so we collect:
 
-  * Your Telegram chat ID (the number that uniquely identify Telegram user)
+  * Your Telegram chat ID (the number that uniquely identifies Telegram user)
   * SMS text
   * SMS time with your local timezone
   * SMS sender (it may be a phone number or a name)
