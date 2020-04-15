@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 private fun date(): String {
-    val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS", Locale.ROOT)
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ROOT)
     return sdf.format(Date())
 }
 
