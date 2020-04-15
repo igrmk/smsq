@@ -4,13 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.github.igrmk.smsq.BuildConfig
 import com.github.igrmk.smsq.myApplication
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 private fun date(): String {
     val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ROOT)
