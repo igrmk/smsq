@@ -43,4 +43,4 @@ Thus, you are advised to review online privacy policy page shown below periodica
 We will notify you of any changes by posting the new Privacy Policy on this page.
 These changes are effective immediately after they are posted on this page.
 
-__[PRIVACY POLICY ONLINE](https://github.com/igrmk/smsq/blob/master/PRIVACY.md)__
+__[PRIVACY POLICY ONLINE](https://smsq.me/PRIVACY.html)__
