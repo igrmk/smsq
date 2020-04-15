@@ -9,5 +9,5 @@ Just install mobile application
 
 Privacy policy
 --------------
-__[PRIVACY POLICY](./PRIVACY.md)__
+__[PRIVACY POLICY](PRIVACY.md)__
 
