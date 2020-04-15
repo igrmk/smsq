@@ -1,5 +1,8 @@
 Android app forwarding SMS messages to Telegram bot
 ===================================================
+
+[![license: GPL v3](https://img.shields.io/badge/license-GPL_v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 It is just handy thing when you work on your laptop.
 You probably don't want to pick up your phone every time you need to enter OTP code.
 
