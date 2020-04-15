@@ -7,6 +7,8 @@ Installation
 ------------
 Just install mobile application
 
+[![downloads](https://img.shields.io/github/v/release/igrmk/smsq.svg)](https://github.com/igrmk/smsq/releases/latest)
+
 Privacy policy
 --------------
 __[PRIVACY POLICY](PRIVACY.md)__
