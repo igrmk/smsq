@@ -520,7 +520,7 @@ func (w *worker) deliver(sms sms) deliveryResult {
 			return networkError
 		}
 	}
-	w.mustExec("update users set delivered=delivered+1 where id=?", chatID)
+	w.mustExec("update users set delivered=delivered+1 where chat_id=?", chatID)
 	return delivered
 }
 
