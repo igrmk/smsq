@@ -77,6 +77,11 @@ class ResenderService : Service() {
             if (deliveryResult == DeliveryResult.NetworkError) {
                 return false
             }
+            if (deliveryResult == DeliveryResult.ApiRetired) {
+                myPreferences.retired = true
+                deleteAllSmses()
+                return true
+            }
             linf(tag, "SMS processed, removing...")
             deleteSms(req.id)
         }

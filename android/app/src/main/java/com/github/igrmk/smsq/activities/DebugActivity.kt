@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import com.github.igrmk.smsq.R
+import com.github.igrmk.smsq.helpers.myPreferences
 import com.github.igrmk.smsq.myApplication
 import java.io.ByteArrayInputStream
 
@@ -28,6 +29,13 @@ class DebugActivity : AppCompatActivity() {
             startActivity(Intent.createChooser(emailIntent, "Send logs to developer"))
         } catch (ex: ActivityNotFoundException) {
             Toast.makeText(this, "No email clients installed", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun onClearPrefsClicked(@Suppress("UNUSED_PARAMETER") view: View) {
+        with(myPreferences.edit()) {
+            clear()
+            apply()
         }
     }
 }

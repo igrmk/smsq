@@ -54,11 +54,12 @@ type deliveryResult int
 
 //go:generate jsonenums -type=deliveryResult
 const (
-	delivered    deliveryResult = 0
-	networkError deliveryResult = 1
-	blocked      deliveryResult = 2
-	badRequest   deliveryResult = 3
-	userNotFound deliveryResult = 4
+	delivered deliveryResult = iota
+	networkError
+	blocked
+	badRequest
+	userNotFound
+	apiRetired
 )
 
 type smsResponse struct {
@@ -116,6 +117,8 @@ func (r deliveryResult) String() string {
 		return "bad_request"
 	case userNotFound:
 		return "user_not_found"
+	case apiRetired:
+		return "api_retired"
 	default:
 		return "undefined"
 	}
@@ -414,6 +417,17 @@ func (w *worker) send(msg baseChattable) error {
 	return nil
 }
 
+func (w *worker) handleRetired(writer http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(writer, "404 not found", http.StatusNotFound)
+		return
+	}
+
+	w.ldbg("got retired API call")
+	writer.Header().Set("Content-Type", "application/json")
+	w.apiReply(writer, apiRetired)
+}
+
 func (w *worker) handleV1SMS(writer http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(writer, "404 not found", http.StatusNotFound)
@@ -479,6 +493,7 @@ func (w *worker) apiReply(writer http.ResponseWriter, result deliveryResult) {
 }
 
 func (w *worker) handleEndpoints() {
+	http.HandleFunc(path.Join(w.cfg.APIDomain, "/v0/sms"), w.handleRetired)
 	http.HandleFunc(path.Join(w.cfg.APIDomain, "/v1/sms"), w.handleV1SMS)
 }
 

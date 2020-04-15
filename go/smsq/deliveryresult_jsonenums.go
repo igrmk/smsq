@@ -14,6 +14,7 @@ var (
 		"blocked":      blocked,
 		"badRequest":   badRequest,
 		"userNotFound": userNotFound,
+		"apiRetired":   apiRetired,
 	}
 
 	_deliveryResultValueToName = map[deliveryResult]string{
@@ -22,6 +23,7 @@ var (
 		blocked:      "blocked",
 		badRequest:   "badRequest",
 		userNotFound: "userNotFound",
+		apiRetired:   "apiRetired",
 	}
 )
 
@@ -34,6 +36,7 @@ func init() {
 			interface{}(blocked).(fmt.Stringer).String():      blocked,
 			interface{}(badRequest).(fmt.Stringer).String():   badRequest,
 			interface{}(userNotFound).(fmt.Stringer).String(): userNotFound,
+			interface{}(apiRetired).(fmt.Stringer).String():   apiRetired,
 		}
 	}
 }

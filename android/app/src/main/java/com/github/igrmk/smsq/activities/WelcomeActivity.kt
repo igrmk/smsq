@@ -48,6 +48,10 @@ class WelcomeActivity : AppCompatActivity() {
 
     private fun resume() {
         versionClicks = 0
+        if (myPreferences.retired) {
+            retired()
+            return
+        }
         logSmsReceivers()
         if (!myPreferences.consent) {
             consentAlert()
@@ -152,6 +156,13 @@ class WelcomeActivity : AppCompatActivity() {
                 .setMessage("Allow this application to read new SMS messages including their text, sender information, time and carrier name?")
                 .setPositiveButton(android.R.string.yes) { _, _ -> myPreferences.consent = true; resume() }
                 .setNegativeButton(android.R.string.no) { _, _ -> finish() }
+                .show()
+    }
+
+    private fun retired() {
+        AlertDialog.Builder(this)
+                .setMessage("Current app version is out of date. Please upgrade")
+                .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
                 .show()
     }
 

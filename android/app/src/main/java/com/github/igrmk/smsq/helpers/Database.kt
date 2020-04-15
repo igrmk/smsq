@@ -101,3 +101,6 @@ fun Context.deleteSms(id: Int) {
         delete(DbHelper.TABLE_SMS, "${DbHelper.COLUMN_SMS_ID} = {id}", "id" to id)
     }
 }
+
+fun Context.deleteAllSmses() = database.use { delete(DbHelper.TABLE_SMS) }
+

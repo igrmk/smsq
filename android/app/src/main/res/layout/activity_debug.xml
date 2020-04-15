@@ -7,7 +7,7 @@
     tools:context=".activities.DebugActivity">
 
     <Button
-        android:id="@+id/revokeButton"
+        android:id="@+id/sendLogsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -17,4 +17,15 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/clearPrefsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:width="240dp"
+        android:onClick="onClearPrefsClicked"
+        android:text="@string/clear_prefs"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/sendLogsButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>

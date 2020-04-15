@@ -41,3 +41,17 @@ var SharedPreferences.consent: Boolean
         putBoolean(Constants.PREF_CONSENT, value)
         apply()
     }
+
+var SharedPreferences.retired: Boolean
+    get() = getBoolean(Constants.PREF_RETIRED, false)
+    set(value) = with(edit()) {
+        putBoolean(Constants.PREF_RETIRED, value)
+        apply()
+    }
+
+var SharedPreferences.versionCode: Int
+    get() = getInt(Constants.PREF_VERSION_CODE, 0)
+    set(value) = with(edit()) {
+        putInt(Constants.PREF_VERSION_CODE, value)
+        apply()
+    }
