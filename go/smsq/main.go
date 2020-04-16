@@ -218,7 +218,7 @@ func (w *worker) start(chatID int64, key string) {
 		return
 	}
 	if key == "" || !checkKey(key) {
-		_ = w.sendText(chatID, false, parseRaw, "Install smsQ application on your phone https://play.google.com/store/apps/details?id=com.github.igrmk.smsq")
+		_ = w.sendText(chatID, false, parseRaw, "Install smsQ application on your phone https://smsq.me")
 		return
 	}
 	chatKey := w.chatKey(chatID)
