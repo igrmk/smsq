@@ -170,11 +170,12 @@ func (w *worker) createDatabase() {
 		create table if not exists users (
 			chat_id integer primary key,
 			key text not null default '',
-			delivered integer not null default 0);`)
+			delivered integer not null default 0,
+			deleted integer not null default 0);`)
 }
 
 func (w *worker) keyForChat(chatID int64) *string {
-	query, err := w.db.Query("select key from users where chat_id=?", chatID)
+	query, err := w.db.Query("select key from users where chat_id=? and deleted=0", chatID)
 	checkErr(err)
 	defer query.Close()
 	if !query.Next() {
@@ -186,7 +187,7 @@ func (w *worker) keyForChat(chatID int64) *string {
 }
 
 func (w *worker) chatForKey(chatKey string) *int64 {
-	query, err := w.db.Query("select chat_id from users where key=?", chatKey)
+	query, err := w.db.Query("select chat_id from users where key=? and deleted=0", chatKey)
 	checkErr(err)
 	defer query.Close()
 	if !query.Next() {
@@ -204,11 +205,11 @@ func checkKey(key string) bool {
 }
 
 func (w *worker) userExists(chatID int64) bool {
-	return singleInt(w.db.QueryRow("select count(*) from users where chat_id=?", chatID)) != 0
+	return singleInt(w.db.QueryRow("select count(*) from users where chat_id=? and deleted=0", chatID)) != 0
 }
 
 func (w *worker) stop(chatID int64) {
-	w.mustExec("delete from users where chat_id=?", chatID)
+	w.mustExec("update users set deleted=1 where chat_id=?", chatID)
 	_ = w.sendText(chatID, false, parseRaw, "Access revoked")
 }
 
@@ -238,7 +239,7 @@ func (w *worker) start(chatID int64, key string) {
 
 	w.mustExec(`
 		insert or replace into users (chat_id, key) values (?, ?)
-		on conflict(chat_id) do update set key=excluded.key`,
+		on conflict(chat_id) do update set key=excluded.key, deleted=0`,
 		chatID,
 		key)
 
@@ -246,7 +247,7 @@ func (w *worker) start(chatID int64, key string) {
 }
 
 func (w *worker) broadcastChats() (chats []int64) {
-	chatsQuery, err := w.db.Query(`select chat_id from users`)
+	chatsQuery, err := w.db.Query(`select chat_id from users where deleted=0`)
 	checkErr(err)
 	defer chatsQuery.Close()
 	for chatsQuery.Next() {
@@ -368,12 +369,12 @@ func (w *worker) feedback(chatID int64, text string) {
 }
 
 func (w *worker) userCount() int {
-	query := w.db.QueryRow("select count(*) from users")
+	query := w.db.QueryRow("select count(*) from users where deleted=0")
 	return singleInt(query)
 }
 
 func (w *worker) activeUserCount() int {
-	query := w.db.QueryRow("select count(*) from users where delivered > 0")
+	query := w.db.QueryRow("select count(*) from users where delivered > 0 and deleted=0")
 	return singleInt(query)
 }
 
