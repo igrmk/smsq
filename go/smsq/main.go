@@ -173,7 +173,7 @@ func (w *worker) createDatabase() {
 			delivered integer not null default 0);`)
 }
 
-func (w *worker) chatKey(chatID int64) *string {
+func (w *worker) keyForChat(chatID int64) *string {
 	query, err := w.db.Query("select key from users where chat_id=?", chatID)
 	checkErr(err)
 	defer query.Close()
@@ -221,7 +221,7 @@ func (w *worker) start(chatID int64, key string) {
 		_ = w.sendText(chatID, false, parseRaw, "Install smsQ application on your phone https://smsq.me")
 		return
 	}
-	chatKey := w.chatKey(chatID)
+	chatKey := w.keyForChat(chatID)
 	if chatKey != nil && *chatKey == key {
 		_ = w.sendText(chatID, false, parseRaw, "You are already set up!")
 		return
