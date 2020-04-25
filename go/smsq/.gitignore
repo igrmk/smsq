@@ -1,6 +1,7 @@
 smsq
 install-go
 deploy*
+tunnel
 *.db
 *.json
 
