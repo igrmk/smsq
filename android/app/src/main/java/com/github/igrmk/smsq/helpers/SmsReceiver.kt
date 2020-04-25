@@ -41,7 +41,7 @@ class SmsReceiver : BroadcastReceiver() {
         }
 
         val extras = intent.extras!!
-        val slot = extras.getInt("slot", -1)
+        val slot = extras.getInt("slot_id", -1)
         val simInfo = if (slot >= 0) simInfo(context, slot) else null
         var displayName = ""
         var carrierName = ""
