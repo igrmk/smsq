@@ -4,6 +4,8 @@ import com.google.crypto.tink.CleartextKeysetHandle
 import com.google.crypto.tink.JsonKeysetReader
 
 object Constants {
+    @Suppress("ConstantConditionIf")
+    val BOT_NAME = if (BuildConfig.BUILD_TYPE == "staging") "smsq_test_bot" else "smsq_bot"
     const val LOG_HALVING_SIZE = 100000
     const val LOG_FILE_NAME = "log"
     const val DEFAULT_DOMAIN_NAME = "smsq.me"
@@ -22,7 +24,7 @@ object Constants {
     const val PERMISSIONS_STATE = 2
 
     @Suppress("SpellCheckingInspection")
-    const val PUBLIC_KEY_STRING = """
+    const val RELEASE_PUBLIC_KEY_STRING = """
         {
             "primaryKeyId": 437945208,
             "key": [{
@@ -38,5 +40,25 @@ object Constants {
         }
     """
 
-    val PUBLIC_KEY = CleartextKeysetHandle.read(JsonKeysetReader.withBytes(PUBLIC_KEY_STRING.toByteArray()))!!
+    @Suppress("SpellCheckingInspection")
+    const val STAGING_PUBLIC_KEY_STRING = """
+        {
+            "primaryKeyId": 3412351950,
+            "key": [{
+                "keyData": {
+                    "typeUrl": "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPublicKey",
+                    "keyMaterialType": "ASYMMETRIC_PUBLIC",
+                    "value": "ElwKBAgCEAMSUhJQCjh0eXBlLmdvb2dsZWFwaXMuY29tL2dvb2dsZS5jcnlwdG8udGluay5BZXNDdHJIbWFjQWVhZEtleRISCgYKAggQEBASCAoECAMQEBAgGAEYARogGIRjU1iGu1eQ86LMS+BQRtccWYGMbh1FVEplotrBgxsiIEovOn1zuHshy3/EciMYwUmh5Rw6wRjSxpCaTlTSnWLU"
+                },
+                "outputPrefixType": "TINK",
+                "keyId": 3412351950,
+                "status": "ENABLED"
+            }]
+        }
+    """
+
+    @Suppress("ConstantConditionIf")
+    val PUBLIC_KEY = CleartextKeysetHandle.read(JsonKeysetReader.withBytes(
+            (if (BuildConfig.BUILD_TYPE == "staging") STAGING_PUBLIC_KEY_STRING else RELEASE_PUBLIC_KEY_STRING)
+                    .toByteArray()))!!
 }

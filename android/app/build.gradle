@@ -36,6 +36,9 @@ android {
             minifyEnabled false
             debuggable true
         }
+        staging {
+            initWith debug
+        }
     }
 }
 

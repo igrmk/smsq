@@ -167,7 +167,7 @@ class WelcomeActivity : AppCompatActivity() {
     }
 
     fun onConnectClicked(@Suppress("UNUSED_PARAMETER") view: View) {
-        val link = "tg://resolve?domain=smsq_bot&start=" + myPreferences.key
+        val link = "tg://resolve?domain=${Constants.BOT_NAME}&start=${myPreferences.key}"
 
         if (isProbablyAnEmulator()) {
             copyToClipboard(link)
