@@ -320,9 +320,9 @@ func (w *worker) processIncomingCommand(chatID int64, command, arguments string)
 		_ = w.sendText(chatID, false, parseHTML,
 			""+
 				"smsq: Receive SMS messages in Telegram\n"+
-				"Install Android app forwarding new SMS messages to this bot\n"+
-				"Open app, enable it, and connect your Telegram account\n"+
-				"Now you receive your SMS messages just in your Telegram!\n"+
+				"1. Install Android app\n"+
+				"2. Open app, start forwarding, connect Telegram\n"+
+				"3. Now you receive your SMS messages in this bot!\n"+
 				"Project page: https://smsq.me\n"+
 				"Source code: https://github.com/igrmk/smsq\n"+
 				"\n"+
