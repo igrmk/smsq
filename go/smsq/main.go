@@ -316,8 +316,6 @@ func (w *worker) processIncomingCommand(chatID int64, command, arguments string)
 		w.feedback(chatID, arguments)
 	case "start":
 		w.start(chatID, arguments)
-	case "source":
-		_ = w.sendText(chatID, false, parseRaw, "Source code: https://github.com/igrmk/smsq")
 	case "help":
 		_ = w.sendText(chatID, false, parseHTML,
 			""+
