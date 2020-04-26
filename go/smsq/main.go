@@ -318,6 +318,21 @@ func (w *worker) processIncomingCommand(chatID int64, command, arguments string)
 		w.start(chatID, arguments)
 	case "source":
 		_ = w.sendText(chatID, false, parseRaw, "Source code: https://github.com/igrmk/smsq")
+	case "help":
+		_ = w.sendText(chatID, false, parseHTML,
+			""+
+				"smsq: Receive SMS messages in Telegram\n"+
+				"Install Android app forwarding new SMS messages to this bot\n"+
+				"Open app, enable it, and connect your Telegram account\n"+
+				"Now you receive your SMS messages just in your Telegram!\n"+
+				"Project page: https://smsq.me\n"+
+				"Source code: https://github.com/igrmk/smsq\n"+
+				"\n"+
+				"Bot commands:\n"+
+				"<b>help</b> — Help\n"+
+				"<b>stop</b> — Revoke access\n"+
+				"<b>feedback</b> — Send feedback\n"+
+				"<b>source</b> — Show source code")
 	default:
 		_ = w.sendText(chatID, false, parseRaw, "Unknown command")
 	}

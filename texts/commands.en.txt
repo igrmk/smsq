@@ -1,3 +1,4 @@
+help - Help
 stop - Revoke access
 feedback - Send feedback
 source - Show source code
