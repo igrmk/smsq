@@ -1,1 +1,3 @@
 Receive SMS messages in Telegram
+Project page: https://smsq.me
+Source code: https://github.com/igrmk/smsq
