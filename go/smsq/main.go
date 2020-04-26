@@ -327,9 +327,9 @@ func (w *worker) processIncomingCommand(chatID int64, command, arguments string)
 				"Source code: https://github.com/igrmk/smsq\n"+
 				"\n"+
 				"Bot commands:\n"+
-				"<b>help</b> — Help\n"+
-				"<b>stop</b> — Revoke access\n"+
-				"<b>feedback</b> — Send feedback")
+				"<b>/help</b> — Help\n"+
+				"<b>/stop</b> — Revoke access\n"+
+				"<b>/feedback</b> — Send feedback")
 	default:
 		_ = w.sendText(chatID, false, parseRaw, "Unknown command")
 	}
