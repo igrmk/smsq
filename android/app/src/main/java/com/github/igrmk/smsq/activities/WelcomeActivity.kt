@@ -168,15 +168,13 @@ class WelcomeActivity : AppCompatActivity() {
 
     fun onConnectClicked(@Suppress("UNUSED_PARAMETER") view: View) {
         val link = "tg://resolve?domain=${Constants.BOT_NAME}&start=${myPreferences.key}"
-
-        if (isProbablyAnEmulator()) {
-            copyToClipboard(link)
-            return
-        }
-
         try {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
         } catch (ex: android.content.ActivityNotFoundException) {
+            if (isProbablyAnEmulator()) {
+                copyToClipboard(link)
+                return
+            }
             telegramAlert()
         }
     }
