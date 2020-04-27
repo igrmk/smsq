@@ -15,6 +15,12 @@ Just install mobile application
 [![f-droid](https://img.shields.io/f-droid/v/com.github.igrmk.smsq.svg)](https://f-droid.org/packages/com.github.igrmk.smsq)
 [![amazon appstore](https://img.shields.io/badge/amazon-appstore-blue.svg)](https://www.amazon.com/dp/B087N339BS)
 
+Usage
+-----
+1. Install Android app
+2. Open app, start forwarding, connect Telegram
+3. Now you receive your SMS messages in this bot!
+
 Privacy policy
 --------------
 __[PRIVACY POLICY](PRIVACY.md)__
