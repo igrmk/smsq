@@ -9,7 +9,7 @@ You probably don't want to pick up your phone every time you need to enter OTP c
 
 Installation
 ------------
-Just install mobile application
+Just install mobile app from any of these sources
 
 [![downloads](https://img.shields.io/github/v/release/igrmk/smsq.svg)](https://github.com/igrmk/smsq/releases/latest)
 [![f-droid](https://img.shields.io/f-droid/v/com.github.igrmk.smsq.svg)](https://f-droid.org/packages/com.github.igrmk.smsq)
