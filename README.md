@@ -4,8 +4,8 @@ Android app forwarding SMS messages to Telegram bot
 [![license: GPL v3](https://img.shields.io/badge/license-GPL_v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![github pages](https://img.shields.io/badge/github-pages-blue.svg)](https://smsq.me)
 
-It is just handy thing when you work on your laptop.
-You probably don't want to pick up your phone every time you need to enter OTP code.
+It is just a handy thing when you work on your laptop.
+You probably don't want to pick up your phone every time you need to enter an OTP code.
 
 Installation
 ------------
@@ -18,7 +18,7 @@ Just install mobile app from any of these sources
 Usage
 -----
 1. Install Android app
-2. Open app, start forwarding, connect Telegram
+2. Open the app, start forwarding, connect Telegram
 3. Now you receive your SMS messages in this bot!
 
 Privacy policy
