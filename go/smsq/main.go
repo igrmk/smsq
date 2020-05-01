@@ -171,7 +171,32 @@ func (w *worker) createDatabase() {
 			chat_id integer primary key,
 			key text not null default '',
 			delivered integer not null default 0,
+			delivered_today integer not null default 0,
+			received_today integer not null default 0,
 			deleted integer not null default 0);`)
+	w.mustExec(`
+		create table if not exists midnight (
+			unix_time integer not null default 0);`)
+}
+
+func (w *worker) storedMidnight() int64 {
+	if singleInt(w.db.QueryRow("select count(*) from midnight")) == 0 {
+		w.mustExec("insert into midnight (unix_time) values (0)")
+		return 0
+	}
+	return singleInt64(w.db.QueryRow("select unix_time from midnight"))
+}
+
+func (w *worker) storeMidnight(midnight int64) {
+	if singleInt(w.db.QueryRow("select count(*) from midnight")) == 0 {
+		w.mustExec("insert into midnight (unix_time) values (?)", midnight)
+		return
+	}
+	w.mustExec("update midnight set unix_time=?", midnight)
+}
+
+func midnight() int64 {
+	return time.Now().Truncate(24 * time.Hour).Unix()
 }
 
 func (w *worker) keyForChat(chatID int64) *string {
@@ -517,6 +542,21 @@ func (w *worker) deliver(sms sms) deliveryResult {
 		return userNotFound
 	}
 
+	w.mustExec("update users set received_today=received_today+1 where chat_id=?", *chatID)
+	receivedToday := singleInt(w.db.QueryRow("select received_today from users where chat_id=?", *chatID))
+	if receivedToday >= w.cfg.ReceivedLimit+1 {
+		return badRequest
+	}
+
+	deliveredToday := singleInt(w.db.QueryRow("select delivered_today from users where chat_id=?", *chatID))
+	if deliveredToday == w.cfg.DeliveredLimit {
+		w.mustExec("update users set delivered_today=delivered_today+1 where chat_id=?", *chatID)
+		_ = w.sendText(*chatID, true, parseRaw, fmt.Sprintf("We cannot deliver more than %d messages a day", w.cfg.DeliveredLimit))
+		return badRequest
+	} else if deliveredToday > w.cfg.DeliveredLimit {
+		return badRequest
+	}
+
 	var lines []string
 	loc := time.FixedZone("", sms.Offset)
 	tm := time.Unix(sms.Timestamp, 0).In(loc)
@@ -548,7 +588,7 @@ func (w *worker) deliver(sms sms) deliveryResult {
 			return networkError
 		}
 	}
-	w.mustExec("update users set delivered=delivered+1 where chat_id=?", chatID)
+	w.mustExec("update users set delivered=delivered+1, delivered_today=delivered_today+1 where chat_id=?", chatID)
 	return delivered
 }
 
@@ -562,6 +602,13 @@ func (w *worker) decrypt(str string) ([]byte, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (w *worker) periodic() {
+	if m := midnight(); m > w.storedMidnight() {
+		w.storeMidnight(m)
+		w.mustExec("update users set delivered_today=0, received_today=0")
+	}
 }
 
 func main() {
@@ -579,8 +626,11 @@ func main() {
 
 	signals := make(chan os.Signal, 16)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
+	var periodicTimer = time.NewTicker(time.Minute * 10)
 	for {
 		select {
+		case <-periodicTimer.C:
+			w.periodic()
 		case s := <-w.deliverChan:
 			s.result <- w.deliver(s.sms)
 		case m := <-incoming:

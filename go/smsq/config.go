@@ -23,7 +23,10 @@ type config struct {
 	DBPath         string `json:"db_path"`         // path to the database
 	Debug          bool   `json:"debug"`           // debug mode
 	PrivateKey     string `json:"private_key"`     // private key
-	privateKey     *keyset.Handle
+	ReceivedLimit  int    `json:"received_limit"`  // received messages limit
+	DeliveredLimit int    `json:"delivered_limit"` // delivered messages limit
+
+	privateKey *keyset.Handle
 }
 
 func readConfig(path string) *config {
@@ -70,6 +73,12 @@ func checkConfig(cfg *config) error {
 	}
 	if cfg.PrivateKey == "" {
 		return errors.New("configure private_key")
+	}
+	if cfg.ReceivedLimit == 0 {
+		return errors.New("configure received_limit")
+	}
+	if cfg.DeliveredLimit == 0 {
+		return errors.New("configure delivered_limit")
 	}
 	return nil
 }
