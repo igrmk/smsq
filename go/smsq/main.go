@@ -60,6 +60,7 @@ const (
 	badRequest
 	userNotFound
 	apiRetired
+	rateLimited
 )
 
 type smsResponse struct {
@@ -119,6 +120,8 @@ func (r deliveryResult) String() string {
 		return "user_not_found"
 	case apiRetired:
 		return "api_retired"
+	case rateLimited:
+		return "rate_limited"
 	default:
 		return "undefined"
 	}
@@ -545,16 +548,16 @@ func (w *worker) deliver(sms sms) deliveryResult {
 	w.mustExec("update users set received_today=received_today+1 where chat_id=?", *chatID)
 	receivedToday := singleInt(w.db.QueryRow("select received_today from users where chat_id=?", *chatID))
 	if receivedToday >= w.cfg.ReceivedLimit+1 {
-		return badRequest
+		return rateLimited
 	}
 
 	deliveredToday := singleInt(w.db.QueryRow("select delivered_today from users where chat_id=?", *chatID))
-	if deliveredToday == w.cfg.DeliveredLimit {
-		w.mustExec("update users set delivered_today=delivered_today+1 where chat_id=?", *chatID)
-		_ = w.sendText(*chatID, true, parseRaw, fmt.Sprintf("We cannot deliver more than %d messages a day", w.cfg.DeliveredLimit))
-		return badRequest
-	} else if deliveredToday > w.cfg.DeliveredLimit {
-		return badRequest
+	if deliveredToday >= w.cfg.DeliveredLimit {
+		if deliveredToday == w.cfg.DeliveredLimit {
+			w.mustExec("update users set delivered_today=delivered_today+1 where chat_id=?", *chatID)
+			_ = w.sendText(*chatID, true, parseRaw, fmt.Sprintf("We cannot deliver more than %d messages a day", w.cfg.DeliveredLimit))
+		}
+		return rateLimited
 	}
 
 	var lines []string
