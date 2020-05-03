@@ -9,6 +9,8 @@ import com.github.igrmk.smsq.Constants
 import com.github.igrmk.smsq.entities.DeliveryResult
 import com.github.igrmk.smsq.entities.SmsRequest
 import com.github.igrmk.smsq.helpers.*
+import com.google.crypto.tink.HybridEncrypt
+import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlin.math.min
 
 class ResenderService : Service() {
@@ -35,7 +37,7 @@ class ResenderService : Service() {
     override fun onCreate() {
         linf(tag, "creating service...")
         super.onCreate()
-        rest = RestTalker(this, myPreferences.domainName)
+        rest = RestTalker(this.logger(), myPreferences.domainName, Constants.PUBLIC_KEY.getPrimitive(HybridEncrypt::class.java))
         handlerThread.start()
         handler = Handler(handlerThread.looper)
     }

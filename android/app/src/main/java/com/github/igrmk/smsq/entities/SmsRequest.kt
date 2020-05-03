@@ -1,5 +1,9 @@
 package com.github.igrmk.smsq.entities
 
-class SmsRequest(sms: Sms) : Sms(sms) {
+import kotlinx.serialization.Serializable
+
+@Serializable
+class SmsRequest : Sms {
+    constructor(sms: Sms) : super(sms)
     var key: String = ""
 }

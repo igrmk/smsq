@@ -1,5 +1,10 @@
 package com.github.igrmk.smsq.entities
 
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
+
+@Serializable
+@Polymorphic
 open class Sms() {
     var id: Int = -1
     var text: String = ""

@@ -29,3 +29,22 @@ fun Context.ldbg(tag: String, msg: String) {
     }
 }
 
+interface Logger {
+    fun lerr(tag: String, msg: String)
+    fun linf(tag: String, msg: String)
+    fun ldbg(tag: String, msg: String)
+}
+
+class ContextLogger(val context: Context) : Logger {
+    override fun lerr(tag: String, msg: String) = context.lerr(tag, msg)
+    override fun linf(tag: String, msg: String) = context.linf(tag, msg)
+    override fun ldbg(tag: String, msg: String) = context.ldbg(tag, msg)
+}
+
+fun Context.logger() = ContextLogger(this)
+
+class NopLogger : Logger {
+    override fun lerr(tag: String, msg: String) {}
+    override fun linf(tag: String, msg: String) {}
+    override fun ldbg(tag: String, msg: String) {}
+}
