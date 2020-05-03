@@ -423,11 +423,17 @@ func (w *worker) smsCount() int {
 	return singleInt(query)
 }
 
+func (w *worker) smsTodayCount() int {
+	query := w.db.QueryRow("select coalesce(sum(delivered_today), 0) from users")
+	return singleInt(query)
+}
+
 func (w *worker) stat() {
 	lines := []string{}
 	lines = append(lines, fmt.Sprintf("users: %d", w.userCount()))
 	lines = append(lines, fmt.Sprintf("active users: %d", w.activeUserCount()))
 	lines = append(lines, fmt.Sprintf("smses: %d", w.smsCount()))
+	lines = append(lines, fmt.Sprintf("smses today: %d", w.smsTodayCount()))
 	_ = w.sendText(w.cfg.AdminID, false, parseRaw, strings.Join(lines, "\n"))
 }
 
