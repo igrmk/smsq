@@ -58,6 +58,7 @@ dependencies {
     implementation 'com.github.igrmk:dull:1.0'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
     testImplementation 'junit:junit:4.12'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 }
 
 def keystoreProperties = new Properties()

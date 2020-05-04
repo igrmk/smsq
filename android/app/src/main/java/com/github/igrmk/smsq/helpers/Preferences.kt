@@ -55,3 +55,10 @@ var SharedPreferences.versionCode: Int
         putInt(Constants.PREF_VERSION_CODE, value)
         apply()
     }
+
+var SharedPreferences.delivered: Int
+    get() = getInt(Constants.PREF_DELIVERED, 0)
+    set(value) = with(edit()) {
+        putInt(Constants.PREF_DELIVERED, value)
+        apply()
+    }

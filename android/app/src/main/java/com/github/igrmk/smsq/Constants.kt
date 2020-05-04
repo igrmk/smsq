@@ -17,6 +17,7 @@ object Constants {
     const val PREF_CONSENT = "consent"
     const val PREF_RETIRED = "retired"
     const val PREF_VERSION_CODE = "version_code"
+    const val PREF_DELIVERED = "delivered"
     const val SOCKET_TIMEOUT_MS = 10000
     val RESEND_PERIOD_MS = arrayOf(5L * 60 * 1000, 15L * 60 * 1000, 45L * 60 * 1000)
     const val KEY_LENGTH = 64

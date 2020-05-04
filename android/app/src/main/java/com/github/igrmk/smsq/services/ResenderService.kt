@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.github.igrmk.smsq.Constants
 import com.github.igrmk.smsq.entities.DeliveryResult
 import com.github.igrmk.smsq.entities.SmsRequest
@@ -76,6 +77,11 @@ class ResenderService : Service() {
                 return false
             }
             linf(tag, "send result: $deliveryResult")
+            if (deliveryResult == DeliveryResult.Delivered) {
+                myPreferences.delivered++
+                val intent = Intent(Constants.PREF_DELIVERED)
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+            }
             if (deliveryResult == DeliveryResult.NetworkError) {
                 return false
             }

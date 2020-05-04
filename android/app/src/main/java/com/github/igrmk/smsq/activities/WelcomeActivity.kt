@@ -1,9 +1,7 @@
 package com.github.igrmk.smsq.activities
 
 import android.Manifest
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Intent
+import android.content.*
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,12 +18,19 @@ import com.github.igrmk.smsq.helpers.*
 import com.github.igrmk.smsq.services.ResenderService
 import kotlinx.android.synthetic.main.activity_welcome.*
 import android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class WelcomeActivity : AppCompatActivity() {
     private val tag = this::class.simpleName!!
     private val versionClickHandler = Handler()
     private var versionClicks = 0
     private val decreaseVersionClicks = Runnable { versionClicks-- }
+
+    private val deliveredListener = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            delivered.text = myPreferences.delivered.toString()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,15 +44,20 @@ class WelcomeActivity : AppCompatActivity() {
         linf(tag, "resuming activity...")
         super.onResume()
         resume()
+        val lbm = LocalBroadcastManager.getInstance(this)
+        lbm.registerReceiver(deliveredListener, IntentFilter(Constants.PREF_DELIVERED))
     }
 
     override fun onPause() {
         super.onPause()
         versionClickHandler.removeCallbacks(decreaseVersionClicks)
+        val lbm = LocalBroadcastManager.getInstance(this)
+        lbm.unregisterReceiver(deliveredListener)
     }
 
     private fun resume() {
         versionClicks = 0
+        delivered.text = myPreferences.delivered.toString()
         if (myPreferences.retired) {
             retired()
             return
