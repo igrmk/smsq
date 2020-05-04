@@ -8,6 +8,6 @@
     <color name="background">#4a5050</color>
     <color name="disabledText">#39dddddd</color>
     <color name="buttonText">#dddddd</color>
-    <color name="text">#444444</color>
+    <color name="text">#aaaaaa</color>
     <color name="buttonNormal">#373c3c</color>
 </resources>
