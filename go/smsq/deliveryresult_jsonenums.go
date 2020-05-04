@@ -15,6 +15,7 @@ var (
 		"badRequest":   badRequest,
 		"userNotFound": userNotFound,
 		"apiRetired":   apiRetired,
+		"rateLimited":  rateLimited,
 	}
 
 	_deliveryResultValueToName = map[deliveryResult]string{
@@ -24,6 +25,7 @@ var (
 		badRequest:   "badRequest",
 		userNotFound: "userNotFound",
 		apiRetired:   "apiRetired",
+		rateLimited:  "rateLimited",
 	}
 )
 
@@ -37,6 +39,7 @@ func init() {
 			interface{}(badRequest).(fmt.Stringer).String():   badRequest,
 			interface{}(userNotFound).(fmt.Stringer).String(): userNotFound,
 			interface{}(apiRetired).(fmt.Stringer).String():   apiRetired,
+			interface{}(rateLimited).(fmt.Stringer).String():  rateLimited,
 		}
 	}
 }
