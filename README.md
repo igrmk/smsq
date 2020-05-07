@@ -13,7 +13,7 @@ Just install mobile app from any of these sources
 
 [![downloads](https://img.shields.io/github/v/release/igrmk/smsq.svg)](https://github.com/igrmk/smsq/releases/latest)
 [![f-droid](https://img.shields.io/f-droid/v/com.github.igrmk.smsq.svg)](https://f-droid.org/packages/com.github.igrmk.smsq)
-[![amazon appstore](https://img.shields.io/badge/amazon-v1.4-blue.svg)](https://www.amazon.com/dp/B087N339BS)
+[![amazon appstore](https://img.shields.io/badge/amazon-v1.5-blue.svg)](https://www.amazon.com/dp/B087N339BS)
 
 Usage
 -----
