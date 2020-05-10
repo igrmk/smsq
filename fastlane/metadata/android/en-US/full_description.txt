@@ -1,2 +1,2 @@
 Your SMS messages are forwarded to your Telegram via our Telegram bot.
-Please read our [https://smsq.me/PRIVACY.html PRIVACY POLICY].
+Please read our <a href="https://smsq.me/PRIVACY.html">PRIVACY POLICY</a>.
