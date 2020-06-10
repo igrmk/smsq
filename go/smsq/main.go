@@ -405,7 +405,7 @@ func (w *worker) feedback(chatID int64, text string) {
 	}
 	w.mustExec("insert into feedback (chat_id, text) values (?, ?)", chatID, text)
 	_ = w.sendText(chatID, false, parseRaw, "Thank you for your feedback")
-	_ = w.sendText(w.cfg.AdminID, true, parseRaw, fmt.Sprintf("Feedback: %s", text))
+	_ = w.sendText(w.cfg.AdminID, true, parseRaw, fmt.Sprintf("Feedback from %d: %s", chatID, text))
 }
 
 func (w *worker) userCount() int {
