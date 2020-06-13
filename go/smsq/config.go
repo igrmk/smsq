@@ -14,17 +14,18 @@ import (
 )
 
 type config struct {
-	ListenAddress  string `json:"listen_address"`  // the address to listen to incoming Telegram messages
-	APIDomain      string `json:"api_domain"`      // the domain name for API
-	WebhookDomain  string `json:"webhook_domain"`  // the domain name for the webhook
-	BotToken       string `json:"bot_token"`       // your Telegram bot token
-	TimeoutSeconds int    `json:"timeout_seconds"` // HTTP timeout
-	AdminID        int64  `json:"admin_id"`        // admin Telegram ID
-	DBPath         string `json:"db_path"`         // path to the database
-	Debug          bool   `json:"debug"`           // debug mode
-	PrivateKey     string `json:"private_key"`     // private key
-	ReceivedLimit  int    `json:"received_limit"`  // received messages limit
-	DeliveredLimit int    `json:"delivered_limit"` // delivered messages limit
+	ListenAddress  string            `json:"listen_address"`  // the address to listen to incoming Telegram messages
+	APIDomain      string            `json:"api_domain"`      // the domain name for API
+	WebhookDomain  string            `json:"webhook_domain"`  // the domain name for the webhook
+	BotToken       string            `json:"bot_token"`       // your Telegram bot token
+	TimeoutSeconds int               `json:"timeout_seconds"` // HTTP timeout
+	AdminID        int64             `json:"admin_id"`        // admin Telegram ID
+	DBPath         string            `json:"db_path"`         // path to the database
+	Debug          bool              `json:"debug"`           // debug mode
+	PrivateKey     string            `json:"private_key"`     // private key
+	ReceivedLimit  int               `json:"received_limit"`  // received messages limit
+	DeliveredLimit int               `json:"delivered_limit"` // delivered messages limit
+	Challenges     map[string]string `json:"challenges"`      // validation challenges
 
 	privateKey *keyset.Handle
 }

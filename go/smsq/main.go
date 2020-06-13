@@ -344,6 +344,12 @@ func (w *worker) processIncomingCommand(chatID int64, command, arguments string)
 		w.feedback(chatID, arguments)
 	case "start":
 		w.start(chatID, arguments)
+	case "challenge":
+		if reply, ok := w.cfg.Challenges[arguments]; ok {
+			_ = w.sendText(chatID, false, parseRaw, reply)
+		} else {
+			_ = w.sendText(chatID, false, parseRaw, "Unknown command")
+		}
 	case "help":
 		_ = w.sendText(chatID, false, parseHTML,
 			""+
