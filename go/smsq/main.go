@@ -380,18 +380,26 @@ func (w *worker) ourID() int64 {
 }
 
 func (w *worker) processTGUpdate(u tg.Update) {
+	onlyInAPrivateChat := "smsq_bot works only in a private chat"
 	if u.Message != nil && u.Message.Chat != nil {
 		if newMembers := u.Message.NewChatMembers; newMembers != nil && len(*newMembers) > 0 {
 			ourID := w.ourID()
 			for _, m := range *newMembers {
 				if int64(m.ID) == ourID {
-					_ = w.sendText(u.Message.Chat.ID, false, parseRaw, "This bot should not work in group")
+					_ = w.sendText(u.Message.Chat.ID, false, parseRaw, onlyInAPrivateChat)
 					break
 				}
 			}
 		} else if u.Message.IsCommand() {
+			if u.Message.Chat.Type != "private" {
+				_ = w.sendText(u.Message.Chat.ID, false, parseRaw, onlyInAPrivateChat)
+				return
+			}
 			w.processIncomingCommand(u.Message.Chat.ID, u.Message.Command(), u.Message.CommandArguments())
 		}
+	} else if u.ChannelPost != nil && u.ChannelPost.Chat != nil && u.ChannelPost.IsCommand() {
+		_ = w.sendText(u.ChannelPost.Chat.ID, false, parseRaw, onlyInAPrivateChat)
+		return
 	}
 }
 
