@@ -29,7 +29,7 @@ func main() {
 	}
 
 	fmt.Println("public key:")
-	fmt.Println(string(buf.Bytes()))
+	fmt.Println(buf.String())
 
 	buf = bytes.Buffer{}
 
@@ -39,5 +39,5 @@ func main() {
 	}
 
 	fmt.Println("private key:")
-	fmt.Println(string(buf.Bytes()))
+	fmt.Println(buf.String())
 }
