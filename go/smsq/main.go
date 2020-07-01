@@ -391,15 +391,6 @@ func (w *worker) processTGUpdate(u tg.Update) {
 			}
 		} else if u.Message.IsCommand() {
 			w.processIncomingCommand(u.Message.Chat.ID, u.Message.Command(), u.Message.CommandArguments())
-		} else {
-			if u.Message.Text == "" {
-				return
-			}
-			parts := strings.SplitN(u.Message.Text, " ", 2)
-			for len(parts) < 2 {
-				parts = append(parts, "")
-			}
-			w.processIncomingCommand(u.Message.Chat.ID, parts[0], parts[1])
 		}
 	}
 }
