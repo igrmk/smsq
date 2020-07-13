@@ -25,3 +25,6 @@ Privacy policy
 --------------
 __[PRIVACY POLICY](PRIVACY.md)__
 
+Thanks to
+---------
+[![JetBrains](svg/jetbrains.svg)](https://www.jetbrains.com/?from=smsq)
