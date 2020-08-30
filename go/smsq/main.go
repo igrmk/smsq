@@ -333,7 +333,6 @@ func (w *worker) processAdminMessage(chatID int64, command, arguments string) bo
 
 func (w *worker) processIncomingCommand(chatID int64, command, arguments string) {
 	command = strings.ToLower(command)
-	linf("chat: %d, command: %s %s", chatID, command, arguments)
 	if chatID == w.cfg.AdminID && w.processAdminMessage(chatID, command, arguments) {
 		return
 	}
@@ -648,6 +647,15 @@ func main() {
 		case s := <-w.deliverChan:
 			s.result <- w.deliver(s.sms)
 		case m := <-incoming:
+			chatString := ""
+			if m.Message != nil && m.Message.Chat != nil {
+				chatString = fmt.Sprintf("chat: %d", m.Message.Chat.ID)
+			}
+			textString := ""
+			if m.Message != nil {
+				textString = fmt.Sprintf("text: %s", m.Message.Text)
+			}
+			linf(strings.Join([]string{"got TG update", chatString, textString}, ", "))
 			w.processTGUpdate(m)
 		case s := <-signals:
 			linf("got signal %v", s)
