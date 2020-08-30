@@ -637,6 +637,8 @@ func main() {
 		checkErr(http.ListenAndServe(w.cfg.ListenAddress, nil))
 	}()
 
+	_ = w.sendText(w.cfg.AdminID, false, parseRaw, "Bot started")
+
 	signals := make(chan os.Signal, 16)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 	var periodicTimer = time.NewTicker(time.Minute * 10)
