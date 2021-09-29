@@ -155,31 +155,13 @@ func (w *worker) removeWebhook() {
 	linf("OK")
 }
 
-func (w *worker) mustExec(query string, args ...interface{}) {
+func (w *worker) mustExec(query string, args ...interface{}) sql.Result {
 	stmt, err := w.db.Prepare(query)
 	checkErr(err)
-	_, err = stmt.Exec(args...)
+	result, err := stmt.Exec(args...)
 	checkErr(err)
-	stmt.Close()
-}
-
-func (w *worker) createDatabase() {
-	linf("creating database if needed...")
-	w.mustExec(`
-		create table if not exists feedback (
-			chat_id integer,
-			text text);`)
-	w.mustExec(`
-		create table if not exists users (
-			chat_id integer primary key,
-			key text not null default '',
-			delivered integer not null default 0,
-			delivered_today integer not null default 0,
-			received_today integer not null default 0,
-			deleted integer not null default 0);`)
-	w.mustExec(`
-		create table if not exists midnight (
-			unix_time integer not null default 0);`)
+	checkErr(stmt.Close())
+	return result
 }
 
 func (w *worker) storedMidnight() int64 {
@@ -205,7 +187,7 @@ func midnight() int64 {
 func (w *worker) keyForChat(chatID int64) *string {
 	query, err := w.db.Query("select key from users where chat_id=? and deleted=0", chatID)
 	checkErr(err)
-	defer query.Close()
+	defer func() { checkErr(query.Close()) }()
 	if !query.Next() {
 		return nil
 	}
@@ -214,16 +196,17 @@ func (w *worker) keyForChat(chatID int64) *string {
 	return &chatKey
 }
 
-func (w *worker) chatForKey(chatKey string) *int64 {
-	query, err := w.db.Query("select chat_id from users where key=? and deleted=0", chatKey)
+func (w *worker) chatForKey(chatKey string) (*int64, int) {
+	query, err := w.db.Query("select chat_id, daily_limit from users where key=? and deleted=0", chatKey)
 	checkErr(err)
-	defer query.Close()
+	defer func() { checkErr(query.Close()) }()
 	if !query.Next() {
-		return nil
+		return nil, 0
 	}
 	var chatID int64
-	checkErr(query.Scan(&chatID))
-	return &chatID
+	var dailyLimit int
+	checkErr(query.Scan(&chatID, &dailyLimit))
+	return &chatID, dailyLimit
 }
 
 func checkKey(key string) bool {
@@ -259,17 +242,18 @@ func (w *worker) start(chatID int64, key string) {
 		_ = w.sendText(chatID, false, parseRaw, "Your previous subscription is revoked")
 	}
 
-	existingChatID := w.chatForKey(key)
+	existingChatID, _ := w.chatForKey(key)
 	if existingChatID != nil && *existingChatID != chatID {
 		_ = w.sendText(chatID, false, parseRaw, "Subscription on other Telegram account has been revoked")
 		_ = w.sendText(*existingChatID, false, parseRaw, "Your subscription has been revoked from other Telegram account")
 	}
 
 	w.mustExec(`
-		insert or replace into users (chat_id, key) values (?, ?)
+		insert or replace into users (chat_id, key, daily_limit) values (?, ?, ?)
 		on conflict(chat_id) do update set key=excluded.key, deleted=0`,
 		chatID,
-		key)
+		key,
+		w.cfg.DeliveredLimit)
 
 	_ = w.sendText(chatID, false, parseRaw, "Congratulations! You should see here new SMS messages")
 }
@@ -277,7 +261,7 @@ func (w *worker) start(chatID int64, key string) {
 func (w *worker) broadcastChats() (chats []int64) {
 	chatsQuery, err := w.db.Query(`select chat_id from users where deleted=0`)
 	checkErr(err)
-	defer chatsQuery.Close()
+	defer func() { checkErr(chatsQuery.Close()) }()
 	for chatsQuery.Next() {
 		var chatID int64
 		checkErr(chatsQuery.Scan(&chatID))
@@ -316,6 +300,32 @@ func (w *worker) direct(arguments string) {
 	_ = w.sendText(w.cfg.AdminID, false, parseRaw, "OK")
 }
 
+func (w *worker) limit(arguments string) {
+	parts := strings.SplitN(arguments, " ", 2)
+	if len(parts) < 2 {
+		_ = w.sendText(w.cfg.AdminID, false, parseRaw, "Usage: /limit chatID text")
+		return
+	}
+	whom, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		_ = w.sendText(w.cfg.AdminID, false, parseRaw, "First argument is invalid")
+		return
+	}
+	limit, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		_ = w.sendText(w.cfg.AdminID, false, parseRaw, "Second argument is invalid")
+		return
+	}
+	result := w.mustExec("update users set daily_limit=? where chat_id=?", limit, whom)
+	answer := "OK"
+	rows, err := result.RowsAffected()
+	checkErr(err)
+	if rows != 1 {
+		answer = "User not found"
+	}
+	_ = w.sendText(w.cfg.AdminID, false, parseRaw, answer)
+}
+
 func (w *worker) processAdminMessage(chatID int64, command, arguments string) bool {
 	switch command {
 	case "stat":
@@ -326,6 +336,9 @@ func (w *worker) processAdminMessage(chatID int64, command, arguments string) bo
 		return true
 	case "direct":
 		w.direct(arguments)
+		return true
+	case "limit":
+		w.limit(arguments)
 		return true
 	}
 	return false
@@ -549,7 +562,7 @@ func (w *worker) handleEndpoints() {
 }
 
 func (w *worker) deliver(sms sms) deliveryResult {
-	chatID := w.chatForKey(sms.Key)
+	chatID, dailyLimit := w.chatForKey(sms.Key)
 	if chatID == nil {
 		w.ldbg("cannot found user")
 		return userNotFound
@@ -562,8 +575,8 @@ func (w *worker) deliver(sms sms) deliveryResult {
 	}
 
 	deliveredToday := singleInt(w.db.QueryRow("select delivered_today from users where chat_id=?", *chatID))
-	if deliveredToday >= w.cfg.DeliveredLimit {
-		if deliveredToday == w.cfg.DeliveredLimit {
+	if deliveredToday >= dailyLimit {
+		if deliveredToday == dailyLimit {
 			w.mustExec("update users set delivered_today=delivered_today+1 where chat_id=?", *chatID)
 			_ = w.sendText(*chatID, true, parseRaw, fmt.Sprintf("We cannot deliver more than %d messages a day", w.cfg.DeliveredLimit))
 		}
