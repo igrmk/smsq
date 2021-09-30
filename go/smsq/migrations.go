@@ -33,7 +33,7 @@ func (w *worker) applyMigrations() {
 	var version int
 	err := row.Scan(&version)
 	if err == sql.ErrNoRows {
-		version = 0
+		version = -1
 		w.mustExec("insert into schema_version(version) values (0)")
 	} else {
 		checkErr(err)
