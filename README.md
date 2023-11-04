@@ -1,5 +1,15 @@
-Android app forwarding SMS messages to Telegram bot
-===================================================
+DEPRECATED Android app forwarding SMS messages to Telegram bot
+==============================================================
+
+This repository is now taking a well-deserved retirement.
+I have switched over to a non-Android phone which means I can't really give this app the testing it deserves.
+Plus, with my main job keeping me busy, I just don't have enough time to keep up with support.
+At last, since I've moved to a country where SMS OTPs aren't often used, this service doesn't really suit my needs anymore.
+
+However I'll be keeping hold of the [https://smsq.me](https://smsq.me/) domain until at least January 1, 2025
+because I want to avoid potential phishing attacks by preventing sneaky domain re-registration.
+After that, the domain might just go back into public access.
+In the meantime, feel free to fork the project and make it feel at home under your own domain.
 
 [![license: GPL v3](https://img.shields.io/badge/license-GPL_v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![github pages](https://img.shields.io/badge/github-pages-blue.svg)](https://smsq.me)
